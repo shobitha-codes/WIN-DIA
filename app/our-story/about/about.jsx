@@ -53,24 +53,24 @@ const founders = [
     id: "tejaswini",
     img: founder1Image,
     name: "Smt. G. Tejaswini",
-    role: "Founder & CEO",
+    role: "Managing Director",
     shortBio:
-      "An experienced entrepreneur transforming traditional foods into global wellness solutions.",
+      "Managing Director, Kalpavristi Coco Foods, championing WIN-DIA's mission of heritage-rooted wellness food.",
     fullBio: [
-      "Tejaswini brings extensive entrepreneurial experience to WIN-DIA, having built and led a large-scale fuel retail business with a sharp focus on operations, customer trust, and disciplined growth. That foundation in running a high-accountability enterprise now shapes how she leads in the food innovation space.",
-      "Driven by a vision to make Indian traditional foods globally relevant, she founded WIN-DIA to bridge the gap between authentic taste and modern nutrition. Under her leadership, WIN-DIA is shaping a new category of wellness-driven Indian foods designed for global palates — rooted in heritage, built for the future.",
+      "Tejaswini is Managing Director at Kalpavristi Coco Foods, the company behind WIN-DIA. She leads the company's operations with a hands-on, disciplined approach, blending strategic thinking with a genuine passion for building something meaningful.",
+      "Driven by a vision to make Indian traditional foods globally relevant, she has been instrumental in shaping WIN-DIA's direction — rooted in heritage, built for the future, and known for offerings like the coconut flour khakhra.",
     ],
   },
   {
     id: "teni",
     img: founder2Image,
     name: "Teni Shridhar",
-    role: "Head of Innovation",
+    role: "Chief Executive Officer",
     shortBio:
-      "Food scientist blending traditional wisdom with modern nutrition science.",
+      "CEO, Kalpavristi Coco Foods, driving WIN-DIA's growth with strategic, quality-focused leadership.",
     fullBio: [
-      "A food scientist with deep expertise in functional ingredients and nutrition science, Teni leads product development at WIN-DIA. His work ensures every product is scientifically grounded while staying true to authentic flavor — never compromising one for the other.",
-      "Teni's approach centers on formulation science that draws from traditional wisdom while meeting the standards of modern wellness needs, resulting in products that are as functional as they are delicious.",
+      "Sridhar serves as Chief Executive Officer at Kalpavristi Coco Foods Pvt. Ltd, the company behind the WIN-DIA brand. He brings a sharp, leadership-driven approach to the business, overseeing strategy and operations as the company builds its presence in the food and wellness space.",
+      "His focus is on steering WIN-DIA toward consistent, sustainable growth — combining strong business fundamentals with an unwavering commitment to quality, ensuring every decision aligns with the brand's long-term vision.",
     ],
   },
 ];
@@ -283,94 +283,6 @@ return (
         </div>
       </>
     )}
-
-    {/* 
-    {activeTabSection === "science" && (
-      <>
-        <div className="about-tabs-img-col about-tabs-img-dark">
-          <div className="about-tabs-gi-visual">
-            <p className="about-tabs-gi-label">GLYCAEMIC INDEX</p>
-            <div className="about-tabs-gi-bars">
-              <div className="about-tabs-gi-bar-wrap">
-                <div className="about-tabs-gi-bar about-tabs-gi-bar-wheat">
-                  <span className="about-tabs-gi-num">85</span>
-                  <span className="about-tabs-gi-flour">WHEAT FLOUR</span>
-                </div>
-              </div>
-              <div className="about-tabs-gi-bar-wrap">
-                <div className="about-tabs-gi-bar about-tabs-gi-bar-coconut">
-                  <span className="about-tabs-gi-num about-tabs-gi-num-green">35</span>
-                  <span className="about-tabs-gi-flour">COCONUT FLOUR</span>
-                </div>
-              </div>
-            </div>
-            <p className="about-tabs-gi-caption">Lower GI → steadier blood sugar</p>
-            <div className="about-tabs-gi-foot">
-              <span>High spike</span><span>Slow release</span>
-            </div>
-          </div>
-        </div>
-        <div className="about-tabs-txt-col">
-          <p className="about-tabs-eyebrow">Formulation</p>
-          <h2 className="about-tabs-head">Roasted, never fried. Built with intention.</h2>
-          <div className="about-tabs-stats">
-            <div className="about-tabs-stat">
-              <span className="about-tabs-stat-val">~15g</span>
-              <span className="about-tabs-stat-label">India's average daily fiber intake</span>
-            </div>
-            <div className="about-tabs-stat">
-              <span className="about-tabs-stat-val">30g</span>
-              <span className="about-tabs-stat-label">What the body actually needs</span>
-            </div>
-          </div>
-          <p className="about-tabs-body">High GI foods spike blood sugar and erode the body's ability to regulate over time. Thins is formulated with CFTRI guidance, bound with green banana flour, amaranth, and lentils — every ingredient earning its place.</p>
-          <hr className="about-tabs-divider" />
-          <div className="about-tabs-pills">
-            <span className="about-tabs-pill about-tabs-pill-sage">Green banana flour</span>
-            <span className="about-tabs-pill about-tabs-pill-gold">Amaranth</span>
-            <span className="about-tabs-pill about-tabs-pill-brown">Lentils</span>
-            <span className="about-tabs-pill about-tabs-pill-sage">CFTRI-guided</span>
-          </div>
-        </div>
-      </>
-    )}
-
-    
-    {activeTabSection === "coconut" && (
-      <>
-        <div className="about-tabs-img-col">
-          <Image src={flourCard} alt="Why Coconut Flour" fill className="about-tabs-img" sizes="50vw" />
-          <div className="about-tabs-img-overlay" />
-          <div className="about-tabs-coconut-badge">
-            <p className="about-tabs-coconut-latin">Cocos nucifera</p>
-            <div className="about-tabs-coconut-stats">
-              <span>GI ≈ 35</span><span>5× fiber</span><span>Gluten-free</span>
-            </div>
-          </div>
-        </div>
-        <div className="about-tabs-txt-col">
-          <p className="about-tabs-eyebrow">The Ingredient</p>
-          <h2 className="about-tabs-head">The by-product that was actually the point.</h2>
-          <p className="about-tabs-body">Coconut flour is what remains after coconut milk is extracted from the flesh. For years it was discarded as an afterthought. It turned out to be the most valuable part — rich in prebiotic fiber that feeds the gut microbiome.</p>
-          <div className="about-tabs-bars">
-            <div className="about-tabs-bar-row">
-              <div className="about-tabs-bar-top"><span>Dietary fiber vs wheat flour</span><span className="about-tabs-bar-val">5× higher</span></div>
-              <div className="about-tabs-bar-track"><div className="about-tabs-bar-fill" style={{width:"100%",background:"#9aab8a"}} /></div>
-            </div>
-            <div className="about-tabs-bar-row">
-              <div className="about-tabs-bar-top"><span>Glycaemic index</span><span className="about-tabs-bar-val" style={{color:"#B85C38"}}>≈ 35 vs 85</span></div>
-              <div className="about-tabs-bar-track"><div className="about-tabs-bar-fill" style={{width:"41%",background:"#C8A96B"}} /></div>
-            </div>
-            <div className="about-tabs-bar-row">
-              <div className="about-tabs-bar-top"><span>Gluten content</span><span className="about-tabs-bar-val" style={{color:"#9aab8a"}}>None</span></div>
-              <div className="about-tabs-bar-track"><div className="about-tabs-bar-fill" style={{width:"2%",background:"#9aab8a"}} /></div>
-            </div>
-          </div>
-          <p className="about-tabs-body" style={{fontSize:"13px",marginTop:"0.5rem"}}>Governing digestion, immunity, and long-term metabolic health — quietly, thoroughly good for you.</p>
-        </div>
-      </>
-    )}
-*/}
   </div>
 </section>
 
