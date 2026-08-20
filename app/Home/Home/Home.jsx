@@ -866,11 +866,11 @@ function Testimonials() {
 
   const recognitions = [
   { title: 'Karnataka Startup Recognized', subtitle: 'Startup Karnataka Initiative', description: 'Kalpavristi Coco Foods Pvt. Ltd. is officially recognized under the Karnataka Government\'s Startup initiative. This recognition by the Karnataka Startup Cell provides access to fiscal incentives, funding support, mentorship, and market development resources — validating Win-Dia as an innovative food-tech venture from Karnataka.', image: recognition1.src, bgImage: heroBg2.src , blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Startup Karnataka — Govt. of Karnataka' },
-  { title: 'Fibre Innovation', subtitle: 'Coconut Flour Crafted', description: "Recognized for pioneering innovation in high-fibre snacking. Our unique coconut flour formulation addresses the modern diet's fibre gap, creating a new category in healthy snacking.", image: recognition2.src , bgImage: productHero1.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Food Innovation Awards' },
-  { title: 'Clean Ingredients', subtitle: 'Thoughtfully Made', description: 'Awarded for our commitment to clean, transparent ingredient sourcing. Every Win-Dia product is crafted with carefully selected natural ingredients, free from artificial additives and preservatives.', image: recognition3.src, bgImage: crispCloseup.src , blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Clean Label Initiative' },
-  { title: 'Trusted Manufacturing', subtitle: 'Premium Quality', description: 'Certified for excellence in manufacturing practices. Our state-of-the-art facility maintains the highest standards of hygiene, quality control, and sustainable production methods.', image: recognition4.src, bgImage: servingPlate.src , blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Quality Assurance Board' },
-  { title: 'Gluten-Free Range', subtitle: 'Better Everyday Choice', description: 'Recognized for creating accessible gluten-free options without compromising on taste. Our range supports dietary needs while delivering the satisfaction of traditional snacking.', image: recognition5.src, bgImage: familySnack.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Celiac Foundation' },
-  { title: 'Modern Snacking', subtitle: 'High Fibre Focus', description: 'Honored for redefining modern snacking with a focus on gut health and wellness. Win-Dia bridges the gap between indulgence and nutrition, making healthy choices effortless.', image: recognition6.src, bgImage: ig4.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Health Today Magazine' },
+  { title: 'CFTRI Recognized', subtitle: 'Food Innovation & Excellence', description: 'Kalpavristi Coco Foods Pvt. Ltd. has been recognized by the Central Food Technological Research Institute (CFTRI), one of India’s leading food research institutions. This recognition reflects our commitment to innovation, quality, and the development of better, value-driven food products.', image: recognition2.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Central Food Technological Research Institute (CFTRI)' },
+  { title: 'RISE Conclave 2026', subtitle: 'Research, Industry & Startup Recognition', description: 'Kalpavristi Coco Foods Pvt. Ltd. participated in RISE Conclave 2026, the Research, Industry, Startup and Entrepreneurship Conclave organized in Bengaluru. The event brought together research, industry, startups, and entrepreneurship, providing an opportunity to showcase our food innovation journey and connect with India’s broader innovation ecosystem.', image: recognition3.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'CSIR — RISE Conclave 2026' },
+  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'Kalpavristi Coco Foods Pvt. Ltd. successfully participated in Cohort 1 of APEDA’s BHARATI Export Enablement Acceleration Programme, gaining valuable insights into export opportunities and global market readiness.', image: recognition4.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
+  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'As part of the APEDA BHARATI programme, Kalpavristi Coco Foods Pvt. Ltd. engaged with experts, industry leaders, and fellow innovators to understand the evolving agri-food export ecosystem and opportunities for Indian food brands.', image: recognition5.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
+  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'Successfully completing the programme marked an important step in our journey towards taking innovative Indian food products to international markets. The experience strengthened our focus on export readiness and our vision of bringing products from Bharat to the world.', image: recognition6.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
 ];
 
 
@@ -911,28 +911,47 @@ function Testimonials() {
     if (!container) return;
 
     const onScroll = () => {
-      // Pause RAF so touchpad/touch doesn't shake
-      isScrollingRef.current = true;
-      currentScrollRef.current = container.scrollLeft;
-      targetScrollRef.current = container.scrollLeft;
-      clearTimeout(scrollTimeoutRef.current);
-      scrollTimeoutRef.current = setTimeout(() => {
-        isScrollingRef.current = false;
-      }, 150);
+  if (!container) return;
 
-      // Update active index to closest card to center
-      const cards = container.querySelectorAll('.rec-card-btn');
-      if (!cards.length) return;
-      const containerCenter = container.scrollLeft + container.offsetWidth / 2;
-      let closest = 0;
-      let minDist = Infinity;
-      cards.forEach((card, i) => {
-        const cardCenter = card.offsetLeft + card.offsetWidth / 2;
-        const dist = Math.abs(cardCenter - containerCenter);
-        if (dist < minDist) { minDist = dist; closest = i; }
-      });
-      setActiveIndex(closest);
-    };
+  isScrollingRef.current = true;
+  currentScrollRef.current = container.scrollLeft;
+  targetScrollRef.current = container.scrollLeft;
+
+  clearTimeout(scrollTimeoutRef.current);
+
+  scrollTimeoutRef.current = setTimeout(() => {
+    isScrollingRef.current = false;
+  }, 150);
+
+  const cards = container.querySelectorAll('.rec-card-btn');
+
+  if (!cards.length) return;
+
+  const containerRect = container.getBoundingClientRect();
+  const containerCenter =
+    containerRect.left + containerRect.width / 2;
+
+  let closestIndex = 0;
+  let closestDistance = Infinity;
+
+  cards.forEach((card, index) => {
+    const cardRect = card.getBoundingClientRect();
+
+    const cardCenter =
+      cardRect.left + cardRect.width / 2;
+
+    const distance = Math.abs(cardCenter - containerCenter);
+
+    if (distance < closestDistance) {
+      closestDistance = distance;
+      closestIndex = index;
+    }
+  });
+
+  setActiveIndex(closestIndex);
+};
+
+     
 
     container.addEventListener('scroll', onScroll, { passive: true });
     return () => container.removeEventListener('scroll', onScroll);
@@ -940,16 +959,34 @@ function Testimonials() {
 
   // Scroll cards to center the active card
   const scrollToCard = (index) => {
-    if (!scrollContainerRef.current) return;
-    const container = scrollContainerRef.current;
-    const cards = container.querySelectorAll('.rec-card-btn');
-    if (!cards[index]) return;
-    const card = cards[index];
-    const cardLeft = card.offsetLeft;
-    const cardWidth = card.offsetWidth;
-    const containerWidth = container.offsetWidth;
-    targetScrollRef.current = cardLeft - (containerWidth / 2) + (cardWidth / 2);
-  };
+  if (!scrollContainerRef.current) return;
+
+  const container = scrollContainerRef.current;
+  const cards = container.querySelectorAll('.rec-card-btn');
+
+  if (!cards[index]) return;
+
+  const card = cards[index];
+
+  const containerRect = container.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+
+  const currentScroll = container.scrollLeft;
+
+  const cardCenter =
+    cardRect.left - containerRect.left + currentScroll + cardRect.width / 2;
+
+  const target =
+    cardCenter - containerRect.width / 2;
+
+  targetScrollRef.current = Math.max(
+    0,
+    Math.min(
+      target,
+      container.scrollWidth - container.clientWidth
+    )
+  );
+};
 
   // When dot clicked — update content AND scroll cards
   const handleDotClick = (index) => {
@@ -963,12 +1000,19 @@ function Testimonials() {
   };
 
   const handleMouseMove = (e) => {
-    if (!scrollContainerRef.current) return;
-    const container = scrollContainerRef.current;
-    const rect = container.getBoundingClientRect();
-    const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
-      targetScrollRef.current = pct * (container.scrollWidth - rect.width) * 0.6;
-  };
+  if (!scrollContainerRef.current) return;
+
+  const container = scrollContainerRef.current;
+  const rect = container.getBoundingClientRect();
+
+  const pct = Math.max(
+    0,
+    Math.min(1, (e.clientX - rect.left) / rect.width)
+  );
+
+  targetScrollRef.current =
+    pct * (container.scrollWidth - container.clientWidth);
+};
 
   if (!isMounted) {
     return <section className="rec-section" style={{minHeight:'70vh',background:'linear-gradient(135deg,#FBF3EA,#FBF3EA)'}}></section>;
@@ -1040,7 +1084,9 @@ function Testimonials() {
                     href={item.blogUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    onMouseEnter={() => handleCardHover(index)}
+                    onMouseEnter={() => {
+                      setActiveIndex(index);
+                    }}
                     className="rec-card-btn"
                     whileHover={{scale:1.05,y:-8}}
                     transition={{duration:0.4,ease:[0.34,1.56,0.64,1]}}
@@ -1059,6 +1105,7 @@ function Testimonials() {
     </section>
   );
 }
+
 
 
 /* ============================================================

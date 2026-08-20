@@ -82,22 +82,22 @@ export default function Footer() {
               </li>
 
               <li>
-  <Link href="/our-story/about">
-    Our Story
-  </Link>
-</li>
+                <Link href="/our-story/about">
+                  Our Story
+                </Link>
+              </li>
 
-<li>
-  <Link href="/health-benefits">
-    Health Benefits
-  </Link>
-</li>
+              <li>
+                <Link href="/health-benefits">
+                  Health Benefits
+                </Link>
+              </li>
 
-<li>
-  <Link href="/our-story/contact">
-    Contact
-  </Link>
-</li>
+              <li>
+                <Link href="/our-story/contact">
+                  Contact
+                </Link>
+              </li>
 
               <li>
                 <Link href="/account">
@@ -125,8 +125,8 @@ export default function Footer() {
               </li>
 
               <li>
-                <a href="mailto:care@windia.com">
-                  care@windia.com
+                <a href="mailto: kcfpl2022@gmail.com">
+                  kcfpl2022@gmail.com 
                 </a>
               </li>
 

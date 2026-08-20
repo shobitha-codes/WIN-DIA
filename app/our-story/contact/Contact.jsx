@@ -108,20 +108,25 @@ const Contact = () => {
                   <div className="win-card-accent"></div>
                   <div className="win-card-content">
                     <h3 className="win-card-title-vertical">Location</h3>
-                    <p className="win-card-text-vertical">Bengaluru, Karnataka</p>
+                    <p className="win-card-text-vertical">Mysore, Karnataka</p>
                     <p className="win-card-subtext-vertical">India</p>
                   </div>
                 </div>
 
-                {/* Email Card */}
-                <div className="win-info-card-vertical">
-                  <div className="win-card-accent"></div>
-                  <div className="win-card-content">
-                    <h3 className="win-card-title-vertical">Email</h3>
-                    <a href="mailto:support@win-dia.com" className="win-card-link-vertical">support@win-dia.com</a>
-                    <a href="mailto:hello@win-dia.com" className="win-card-link-vertical">hello@win-dia.com</a>
-                  </div>
-                </div>
+               {/* Email Card */}
+<div className="win-info-card-vertical">
+  <div className="win-card-accent"></div>
+  <div className="win-card-content">
+    <h3 className="win-card-title-vertical">Email</h3>
+
+    <a
+      href="mailto:kcfpl2022@gmail.com"
+      className="win-card-link-vertical"
+    >
+      kcfpl2022@gmail.com
+    </a>
+  </div>
+</div>
 
                 {/* Phone Card */}
                 <div className="win-info-card-vertical">
@@ -133,17 +138,28 @@ const Contact = () => {
                   </div>
                 </div>
 
-                {/* Social Card */}
-                <div className="win-info-card-vertical">
-                  <div className="win-card-accent"></div>
-                  <div className="win-card-content">
-                    <h3 className="win-card-title-vertical">Social</h3>
-                    <div className="win-social-links-vertical">
-                      <a href="#" className="win-social-link-vertical">Instagram</a>
-                      <a href="#" className="win-social-link-vertical">Facebook</a>
-                    </div>
-                  </div>
-                </div>
+               {/* Social Card */}
+<div className="win-info-card-vertical">
+  <div className="win-card-accent"></div>
+
+  <div className="win-card-content">
+    <h3 className="win-card-title-vertical">Social</h3>
+
+    <div className="win-social-links-vertical">
+      <a
+        href="https://www.instagram.com/Kalpavristi_Coco_FAB/"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="win-social-link-vertical"
+        onClick={(e) => {
+          e.stopPropagation();
+        }}
+      >
+        Instagram
+      </a>
+    </div>
+  </div>
+</div>
               </div>
             </div>
           </div>
@@ -258,7 +274,7 @@ const Contact = () => {
       </p>
 
       <a
-        href="https://mail.google.com/mail/?view=cm&fs=1&to=business@win-dia.com"
+        href="https://mail.google.com/mail/?view=cm&fs=1&to=kcfpl2022@gmail.com"
         target="_blank"
         rel="noopener noreferrer"
         className="win-business-email"

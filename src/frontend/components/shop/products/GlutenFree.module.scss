@@ -94,6 +94,11 @@
   box-shadow: 0 1rem 2.4rem rgba(54, 28, 13, 0.18);
 }
 
+.section[data-navbar-theme="combo"] .cardExpanded .showcase {
+  background: #8A536B;
+  box-shadow: 0 1rem 2.4rem rgba(54, 28, 13, 0.18);
+}
+
 .imageFrame {
   position: relative;
   z-index: 2;

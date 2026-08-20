@@ -4,6 +4,7 @@ import moringaImage from "@/src/frontend/assets/images/products/gluten-free/mori
 import everydayCurryLeafImage from "@/src/frontend/assets/images/products/everyday/curryleaf.png";
 import everydayGarlicImage from "@/src/frontend/assets/images/products/everyday/garlic.png";
 import everydayOnionImage from "@/src/frontend/assets/images/products/everyday/onion.png";
+import comboImage from "@/src/frontend/assets/images/products/combo/combo-offer.png";
 
 export const glutenFreeProducts = [
   {
@@ -12,7 +13,7 @@ export const glutenFreeProducts = [
     name: "Jeera Flavour",
     flavour: "Jeera",
     image: jeeraImage,
-    description: "A crisp, fibre-rich snack with the mellow sweetness of roasted onion.",
+    description: "Roasted jeera, deep and comforting in every bite.",
     price: "₹640",
     offer: "12-Packet Bundle",
     offerDetails: "🎁 Pay for 10 + Get 2 FREE",
@@ -25,7 +26,7 @@ export const glutenFreeProducts = [
     name: "Methi Flavour",
     flavour: "Methi",
     image: methiImage,
-    description: "A bold, savoury crunch layered with warm roasted garlic notes.",
+    description: "Earthy, aromatic, and full of homemade warmth.",
     price: "₹640",
     offer: "12-Packet Bundle",
     offerDetails: "🎁 Pay for 10 + Get 2 FREE",
@@ -37,7 +38,7 @@ export const glutenFreeProducts = [
     name: "Moringa Leaf Flavour",
     flavour: "Moringa",
     image: moringaImage,
-    description: "A fragrant, savoury bite finished with aromatic curry leaf.",
+    description: "Nature's superleaf, baked into every crisp.",
     price: "₹640",
     offer: "12-Packet Bundle",
     offerDetails: "🎁 Pay for 10 + Get 2 FREE",
@@ -84,6 +85,34 @@ export const everydayProducts = [
     delivery: "🚚 Free Delivery",
   },
 ] as const;
+
+export const comboOffer = {
+  id: "complete-thins-combo",
+  name: "The Complete Thins Combo",
+  title: "6 Flavours · 12 Packets",
+  flavour: "All 6 Flavours",
+  description:
+    "Get 2 packets of every WIN-DIA Thins flavour and pay for only 10 packets.",
+  flavours: [
+    "Moringa",
+    "Methi",
+    "Jeera",
+    "Garlic",
+    "Onion",
+    "Curry Leaf",
+  ],
+  image:comboImage,
+  price: "₹640",
+  offer: "12-Packet Bundle",
+  offerDetails: "🎁 Pay for 10 + Get 2 FREE",
+  delivery: "🚚 Free Delivery",
+  packetCount: 12,
+  paidPackets: 10,
+  pricePerPacket: 64,
+  regularPrice: 768,
+  comboPrice: 640,
+  savings: 128,
+} as const;
 
 type StoreProduct = {
   readonly id: string;

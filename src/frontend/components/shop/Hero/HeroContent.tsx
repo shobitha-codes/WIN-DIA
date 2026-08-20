@@ -9,8 +9,8 @@ import styles from "./HeroContent.module.scss";
 type HeroContentProps = {
   readonly heading: ReactNode;
   readonly headingId: string;
-  readonly ctaHref: string;
-  readonly ctaLabel: string;
+  readonly ctaHref?: string;
+  readonly ctaLabel?: string;
 };
 
 /** Centrally aligned messaging and action for the shop hero. */
@@ -46,13 +46,15 @@ export function HeroContent({
       >
         {heading}
       </motion.h1>
-      <motion.div
-        className={styles.action}
-        variants={contentAnimation}
-        transition={{ delay: 0.2 }}
-      >
-        <HeroButton href={ctaHref}>{ctaLabel}</HeroButton>
-      </motion.div>
+      {ctaHref && ctaLabel && (
+        <motion.div
+          className={styles.action}
+          variants={contentAnimation}
+          transition={{ delay: 0.2 }}
+        >
+          <HeroButton href={ctaHref}>{ctaLabel}</HeroButton>
+        </motion.div>
+      )}
     </motion.div>
   );
 }

@@ -36,8 +36,6 @@ export function Hero() {
           </>
         }
         headingId="shop-hero-heading"
-        ctaHref="/shop"
-        ctaLabel="shop here"
       />
     </section>
   );

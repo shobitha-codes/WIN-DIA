@@ -11,6 +11,7 @@ import { useDispatch } from "react-redux";
 import { glutenFreeProducts } from "@/src/frontend/data/products";
 import { addToCart, setBuyNowItem } from "@/src/frontend/redux/slices/cartSlice";
 import { addToWishlist, removeFromWishlist } from "@/src/frontend/redux/slices/wishlistSlice";
+import { useAuth } from "@/src/frontend/hooks/useAuth";
 
 import styles from "./GlutenFree.module.scss";
 
@@ -20,7 +21,7 @@ type Product = {
   readonly title: string;
   readonly name: string;
   readonly flavour: string;
-  readonly image: StaticImageData | string;
+  readonly image: string | StaticImageData;
   readonly description: string;
   readonly price: string;
   readonly offer?: string;
@@ -35,7 +36,7 @@ type ProductRangeProps = {
   readonly heading: string;
   readonly headingId: string;
   readonly products: readonly Product[];
-  readonly theme: "gluten-free" | "everyday";
+  readonly theme: "gluten-free" | "everyday" | "combo";
 };
 
 type ProductInteraction = {
@@ -70,6 +71,7 @@ const layoutTransition = { type: "spring", stiffness: 240, damping: 28 } as cons
 export function ProductRange({ heading, headingId, products, theme }: ProductRangeProps) {
   const dispatch = useDispatch();
   const router = useRouter();
+  const { user, loading: authLoading } = useAuth();
   const [selectedProductId, setSelectedProductId] = useState<string | null>(null);
   const [phase, setPhase] = useState<ShowcasePhase>("idle");
   const [interactions, setInteractions] = useState<Record<string, ProductInteraction>>(() =>
@@ -87,6 +89,15 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
   const [cartSparkles, setCartSparkles] = useState<string | null>(null);
   const timers = useRef<number[]>([]);
   const prefersReducedMotion = useReducedMotion();
+
+  const requireAuth = () => {
+    if (authLoading) return false;
+    if (!user) {
+      router.push("/login");
+      return false;
+    }
+    return true;
+  };
 
   const schedule = (callback: () => void, delay: number) => {
     const timer = window.setTimeout(callback, prefersReducedMotion ? 0 : delay);
@@ -175,6 +186,7 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
               onOpen={() => openProduct(product.id)}
               onBack={closeProduct}
               onToggleWishlist={() => {
+                if (!requireAuth()) return;
                 const nextWishlisted = !interactions[product.id].isWishlisted;
                 const storeProduct = toStoreProduct(product, theme);
                 if (nextWishlisted) {
@@ -191,6 +203,7 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
               onQuantityChange={(quantity) => {
                 const nextQuantity = Math.max(0, quantity);
                 const currentQuantity = interactions[product.id].quantity;
+                if (nextQuantity > currentQuantity && !requireAuth()) return;
                 const isFirstItem = interactions[product.id].quantity === 0 && nextQuantity === 1;
                 if (nextQuantity > currentQuantity) {
                   dispatch(addToCart(toStoreProduct(product, theme), nextQuantity - currentQuantity));
@@ -205,6 +218,7 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
                 updateInteraction(product.id, { quantity: nextQuantity });
               }}
               onBuyNow={() => {
+                if (!requireAuth()) return;
                 dispatch(setBuyNowItem({ product: toStoreProduct(product, theme), qty: 1 }));
                 router.push("/checkout");
               }}
