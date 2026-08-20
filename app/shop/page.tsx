@@ -14,7 +14,7 @@ async function fetchProductsByCategory(categorySlug: string) {
       : "http://localhost:3000";
 
     const res = await fetch(`${baseUrl}/api/products?category=${categorySlug}`, {
-      next: { revalidate: 60 },
+      next: { revalidate: 60, tags: ["products"] },
     });
 
     if (!res.ok) return [];

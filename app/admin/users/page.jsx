@@ -5,9 +5,7 @@ import toast from "react-hot-toast";
 import { useAuth } from "@/src/frontend/hooks/useAuth";
 import styles from "../admin.module.css";
 
-const ROLES = ["customer", "admin"];
-
-// ---- Data hook: encapsulates all user API calls (list / role change) ----
+// ---- Data hook: encapsulates all user API calls (list) ----
 function useAdminUsers() {
   const { authFetch } = useAuth();
   const [users, setUsers] = useState([]);
@@ -32,24 +30,7 @@ function useAdminUsers() {
     loadUsers();
   }, [loadUsers]);
 
-  const changeRole = useCallback(
-    async (user, role) => {
-      const res = await authFetch("/api/admin/users", {
-        method: "PATCH",
-        body: JSON.stringify({ id: user.id, role }),
-      });
-      const data = await res.json();
-      if (!data.success) {
-        toast.error(data.error || "Could not update role");
-        return;
-      }
-      toast.success("User role updated");
-      loadUsers();
-    },
-    [authFetch, loadUsers]
-  );
-
-  return { users, loading, changeRole };
+  return { users, loading };
 }
 
 function formatJoinedDate(createdAt) {
@@ -57,24 +38,29 @@ function formatJoinedDate(createdAt) {
 }
 
 // ---- Users table row ----
-function UserRow({ user, onChangeRole }) {
+function UserRow({ user }) {
+  const isAdminRole = user.role === "admin";
   return (
     <tr>
       <td>{user.full_name || user.name || "-"}</td>
       <td>{user.email}</td>
       <td>{user.phone || "-"}</td>
       <td>
-        <select
-          className={styles.select}
-          value={user.role || "customer"}
-          onChange={(e) => onChangeRole(user, e.target.value)}
+        <span
+          style={{
+            display: "inline-block",
+            padding: "4px 12px",
+            borderRadius: "12px",
+            fontSize: "12px",
+            fontWeight: 600,
+            textTransform: "capitalize",
+            backgroundColor: isAdminRole ? "#8b5cf618" : "#10b98118",
+            color: isAdminRole ? "#8b5cf6" : "#10b981",
+            border: `1px solid ${isAdminRole ? "#8b5cf640" : "#10b98140"}`,
+          }}
         >
-          {ROLES.map((role) => (
-            <option key={role} value={role}>
-              {role}
-            </option>
-          ))}
-        </select>
+          {user.role || "customer"}
+        </span>
       </td>
       <td>{formatJoinedDate(user.created_at)}</td>
     </tr>
@@ -82,7 +68,7 @@ function UserRow({ user, onChangeRole }) {
 }
 
 // ---- Users table ----
-function UsersTable({ users, loading, onChangeRole }) {
+function UsersTable({ users, loading }) {
   if (loading) return <div className={styles.empty}>Loading users...</div>;
 
   return (
@@ -99,7 +85,7 @@ function UsersTable({ users, loading, onChangeRole }) {
         </thead>
         <tbody>
           {users.map((user) => (
-            <UserRow key={user.id} user={user} onChangeRole={onChangeRole} />
+            <UserRow key={user.id} user={user} />
           ))}
           {!users.length && (
             <tr>
@@ -114,18 +100,18 @@ function UsersTable({ users, loading, onChangeRole }) {
 
 // ---- Page ----
 export default function AdminUsersPage() {
-  const { users, loading, changeRole } = useAdminUsers();
+  const { users, loading } = useAdminUsers();
 
   return (
     <>
       <div className={styles.toolbar}>
         <div>
           <h1 className={styles.topTitle}>Users</h1>
-          <p className={styles.muted}>View customers and make trusted team members admins.</p>
+          <p className={styles.muted}>View registered customers and their roles.</p>
         </div>
       </div>
       <section className={styles.panel}>
-        <UsersTable users={users} loading={loading} onChangeRole={changeRole} />
+        <UsersTable users={users} loading={loading} />
       </section>
     </>
   );

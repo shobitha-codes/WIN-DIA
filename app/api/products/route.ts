@@ -4,6 +4,11 @@ import { ProductService } from '@/src/backend/services/product.service';
 import { handleServiceResult } from '@/src/backend/utils/route-helper.util';
 import { createErrorResponse } from '@/src/backend/types/api-response.types';
 
+// This route reads live Supabase data and is consumed by app/shop/page.tsx via a
+// tagged fetch (see fetchProductsByCategory). Force dynamic rendering so Next.js
+// never serves a build-time-static response for product data.
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

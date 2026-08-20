@@ -4,6 +4,9 @@ import { CMSService } from '@/src/backend/services/cms.service';
 import { handleServiceResult } from '@/src/backend/utils/route-helper.util';
 import { createErrorResponse } from '@/src/backend/types/api-response.types';
 
+// Always read live banner data from Supabase, never a build-time-static response.
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     const cmsService = container.resolve<CMSService>(ServiceTokens.CMSService);
