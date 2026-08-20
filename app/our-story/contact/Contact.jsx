@@ -128,7 +128,7 @@ const Contact = () => {
                   <div className="win-card-accent"></div>
                   <div className="win-card-content">
                     <h3 className="win-card-title-vertical">Phone</h3>
-                    <a href="tel:+919876543210" className="win-card-link-vertical">+91 98765 43210</a>
+                    <a href="tel:+919686153413" className="win-card-link-vertical">+91 96861 53413</a>
                     <p className="win-card-hours-vertical">Monday - Friday, 9:00 AM - 6:00 PM IST</p>
                   </div>
                 </div>
@@ -197,7 +197,7 @@ const Contact = () => {
                     type="tel"
                     value={form.phone}
                     onChange={handleChange}
-                    placeholder="+91 98765 43210"
+                    placeholder="+91 96861 53413"
                   />
                 </div>
                 

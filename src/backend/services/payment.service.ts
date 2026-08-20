@@ -100,8 +100,11 @@ export class PaymentServiceImpl implements PaymentService {
     const secret = env.RAZORPAY_KEY_SECRET || process.env.RAZORPAY_KEY_SECRET;
 
     if (!secret) {
-      logger.warn('[PaymentService.verifySignature] RAZORPAY_KEY_SECRET is not set, completing verification for test mode');
-      return success(true);
+      // Fail closed: without a secret we cannot verify the signature at all.
+      // Silently accepting the payment here would let anyone forge a "successful"
+      // payment callback, so we reject instead of trusting it.
+      logger.error('[PaymentService.verifySignature] RAZORPAY_KEY_SECRET is not set — cannot verify payment signature, rejecting');
+      return failure(new PaymentError('Payment verification is not configured (missing RAZORPAY_KEY_SECRET)'));
     }
 
     try {
@@ -118,7 +121,10 @@ export class PaymentServiceImpl implements PaymentService {
 
       return success(isValid);
     } catch (err) {
-      return success(true);
+      // Fail closed on unexpected errors (e.g. malformed signature) rather than
+      // treating the payment as verified.
+      logger.error('[PaymentService.verifySignature] Error while verifying signature', err);
+      return failure(new PaymentError('Payment signature verification failed'));
     }
   }
 

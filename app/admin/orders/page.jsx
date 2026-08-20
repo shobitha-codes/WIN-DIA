@@ -35,8 +35,9 @@ function formatDate(dateStr) {
 const COMPANY_INFO = {
   name: "WIN-DIA Foods",
   address: "Mysore, Karnataka",
-  phone: "+91 9148339947",
-  gstin: "GSTIN: 29XXXXX1234X1Z5",
+  phone: "+91 96861 53413",
+  // TODO: replace with the registered GSTIN before this label is used for real shipments.
+  gstin: "GSTIN: Not yet configured",
 };
 
 function generateShippingLabel(order) {

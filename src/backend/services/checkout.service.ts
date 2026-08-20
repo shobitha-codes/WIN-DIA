@@ -15,8 +15,6 @@ import { ProductRepository } from '../repositories/product.repository';
 import { OrderRepository } from '../repositories/order.repository';
 import { logger } from '../utils/logger.util';
 import { container, RepositoryTokens, ServiceTokens } from '../providers/container.provider';
-import { stableProductUuid } from '../utils/helpers.util';
-import { getAdminClient } from '../config/supabase.config';
 import { BundlePricing, calculateBundlePricing, calculateOrderTotal } from '../constants/bundle-pricing.constants';
 
 export interface CheckoutResult {
@@ -229,36 +227,26 @@ export class CheckoutServiceImpl implements CheckoutService {
             validProductId = resolvedProduct.id;
             console.log(`[CheckoutService] Resolved product "${rawId}" → ${resolvedProduct.id} (${resolvedProduct.name}, stock: ${resolvedProduct.count_in_stock})`);
           } else {
-            // Last resort: use stableProductUuid to maintain backward compatibility
-            // This ensures FK constraint is satisfied, but logs a warning
-            validProductId = stableProductUuid(rawId);
-            console.warn(
-              `[CheckoutService] Could not resolve product for ID "${rawId}". ` +
-              `Using generated UUID ${validProductId}. Product may need to be seeded in the database.`
-            );
+            // Could not resolve this item to a real, pre-seeded product.
+            // Do NOT fabricate a UUID or auto-create a placeholder product with
+            // fake stock — that would inject phantom inventory into the real DB.
+            // Fail the checkout instead so the catalog mismatch gets fixed.
+            console.error(`[CheckoutService] Could not resolve product for ID "${rawId}". Rejecting checkout.`);
+            return failure(new NotFoundError(
+              `Product "${item.name || rawId}" could not be found. Please refresh and try again.`
+            ));
           }
         }
 
-        // Only create a placeholder product if the resolved ID doesn't exist in DB.
-        // This is a safety net — in production all products should be pre-seeded.
-        try {
-          const prodCheck = await this.productRepo.findById(validProductId);
-          if (!prodCheck.success || !prodCheck.value) {
-            console.warn(
-              `[CheckoutService] Product ${validProductId} not found in DB for item "${item.name}". ` +
-              `Creating placeholder. Ensure products are properly seeded.`
-            );
-            const adminClient = getAdminClient();
-            await adminClient.from('products').upsert({
-              id: validProductId,
-              name: item.name || item.product_name || 'WIN-DIA Product',
-              slug: rawId.replace(/^(gluten-free|everyday)-/, ''),
-              price: BundlePricing.BUNDLE_PRICE,
-              count_in_stock: 100,
-              is_active: true,
-            });
-          }
-        } catch (_) {}
+        // Verify the resolved product actually exists in the DB before proceeding.
+        // If it doesn't, reject rather than silently creating a placeholder with fake stock.
+        const prodExistsCheck = await this.productRepo.findById(validProductId);
+        if (!prodExistsCheck.success || !prodExistsCheck.value) {
+          console.error(`[CheckoutService] Product ${validProductId} not found in DB for item "${item.name}". Rejecting checkout.`);
+          return failure(new NotFoundError(
+            `Product "${item.name || rawId}" is not available. Please refresh and try again.`
+          ));
+        }
 
         // Stock validation: check against packets to be SHIPPED (12 per bundle)
         // This is the real quantity that leaves the warehouse
@@ -318,7 +306,12 @@ export class CheckoutServiceImpl implements CheckoutService {
 
       // STEP 7: RPC_INVOCATION & ORDER_CREATION
       const step7Start = Date.now();
-      const mockRazorpayOrderId = `order_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+      // Placeholder written to the initial order-creation transaction's payment row.
+      // The repository only persists this for COD orders; for online payments the
+      // REAL Razorpay provider_order_id is generated afterwards via
+      // paymentService.initiateRazorpayPayment and overwrites createdPayment below.
+      // This value must never be returned to the client as a real Razorpay order ID.
+      const pendingPaymentPlaceholderId = `pending_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
       let createdOrder: Order;
       let createdPayment: Payment;
       let createdShipment: Shipment;
@@ -328,7 +321,7 @@ export class CheckoutServiceImpl implements CheckoutService {
         userId,
         orderData: { subtotal, discount, tax, shipping, total },
         itemsCount: preparedOrderItems.length,
-        paymentData: { mockRazorpayOrderId, total },
+        paymentData: { pendingPaymentPlaceholderId, total },
       });
 
       const selectedPaymentMethod = (dto as any).paymentMethod || (dto as any).payment_method || 'razorpay';
@@ -349,7 +342,7 @@ export class CheckoutServiceImpl implements CheckoutService {
         preparedOrderItems,
         {
           payment_provider: 'razorpay',
-          provider_order_id: mockRazorpayOrderId,
+          provider_order_id: pendingPaymentPlaceholderId,
           amount: total,
           currency: 'INR',
           status: 'pending',
@@ -454,11 +447,19 @@ export class CheckoutServiceImpl implements CheckoutService {
       const totalProcessTime = Date.now() - startTime;
       console.log(`--- [CHECKOUT_SERVICE: EXIT_SUCCESS] Total Time: ${totalProcessTime}ms | OrderNumber: ${createdOrder.order_number} ---\n`);
 
+      // For online payments, createdPayment must carry a REAL Razorpay provider_order_id
+      // (set either by the RPC's payment row or by paymentService.initiateRazorpayPayment
+      // above). Never fall back to the internal placeholder ID here — returning it to the
+      // client would produce a Razorpay checkout call with a bogus order id.
+      if (selectedPaymentMethod !== 'cod' && !createdPayment?.provider_order_id) {
+        return failure(new ValidationError('Payment initialization failed: no Razorpay order was created'));
+      }
+
       return success({
         order: createdOrder,
         items: preparedOrderItems as any,
         payment: createdPayment,
-        razorpayOrderId: createdPayment?.provider_order_id || mockRazorpayOrderId,
+        razorpayOrderId: createdPayment?.provider_order_id || '',
         shipment: createdShipment,
         pricing: {
           subtotal,

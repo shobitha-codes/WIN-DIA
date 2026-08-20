@@ -2,7 +2,7 @@
 
 import styles from "./WhatsAppButton.module.css";
 
-const WHATSAPP_NUMBER = "919686153413"; // Kalpavristi Coco Foods contact number
+const WHATSAPP_NUMBER = "919686153413"; // WIN-DIA contact number
 const WHATSAPP_MESSAGE = "Hi! I'm interested in WINDIA.";
 
 export default function WhatsAppButton() {

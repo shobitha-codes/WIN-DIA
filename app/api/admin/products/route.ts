@@ -1,8 +1,18 @@
 import { NextResponse } from 'next/server';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { ServiceTokens } from '@/src/backend/providers/container.provider';
 import { ProductService } from '@/src/backend/services/product.service';
 import { getAdminUserContext, handleServiceResult } from '@/src/backend/utils/route-helper.util';
 import { createErrorResponse } from '@/src/backend/types/api-response.types';
+
+// Admin data must always be fresh and never cached by Next.js or a CDN.
+export const dynamic = 'force-dynamic';
+
+/** Busts the storefront's cached product fetch (see app/shop/page.tsx) so edits show up immediately. */
+function revalidateStorefrontProducts() {
+  revalidateTag('products', 'max');
+  revalidatePath('/shop');
+}
 
 export async function GET(request: Request) {
   try {
@@ -38,6 +48,7 @@ export async function POST(request: Request) {
     const productService = adminRes.value.scope.resolve<ProductService>(ServiceTokens.ProductService);
     const result = await productService.createProduct(body);
 
+    if (result.success) revalidateStorefrontProducts();
     return handleServiceResult(result, 201);
   } catch (err: any) {
     return NextResponse.json(
@@ -67,6 +78,7 @@ export async function PUT(request: Request) {
     const productService = adminRes.value.scope.resolve<ProductService>(ServiceTokens.ProductService);
     const result = await productService.updateProduct(id, dto);
 
+    if (result.success) revalidateStorefrontProducts();
     return handleServiceResult(result);
   } catch (err: any) {
     return NextResponse.json(
@@ -96,6 +108,7 @@ export async function DELETE(request: Request) {
     const productService = adminRes.value.scope.resolve<ProductService>(ServiceTokens.ProductService);
     const result = await productService.deleteProduct(id);
 
+    if (result.success) revalidateStorefrontProducts();
     return handleServiceResult(result);
   } catch (err: any) {
     return NextResponse.json(
