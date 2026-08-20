@@ -62,6 +62,21 @@ export default function LoginPage() {
         refresh_token: result.session.refresh_token,
       });
 
+      // Admin accounts land on the admin dashboard instead of the storefront,
+      // so non-technical admin users don't need to know the /admin URL exists.
+      try {
+        const meRes = await fetch('/api/auth/me', {
+          headers: { Authorization: `Bearer ${result.session.access_token}` },
+        });
+        const meData = await meRes.json();
+        if (meData?.user?.role === 'admin') {
+          router.push('/admin');
+          return;
+        }
+      } catch {
+        // If the role check fails, fall back to the normal storefront redirect below.
+      }
+
       router.push('/');
     } catch (err) {
       console.error('Login error:', err);

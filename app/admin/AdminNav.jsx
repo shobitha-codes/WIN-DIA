@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { FiExternalLink, FiGrid, FiPackage, FiShoppingBag, FiTag, FiUsers, FiEdit3 } from "react-icons/fi";
+import { FiExternalLink, FiGrid, FiPackage, FiShoppingBag, FiTag, FiUsers } from "react-icons/fi";
 import styles from "./admin.module.css";
 
 const NAV_LINKS = [
@@ -11,7 +11,6 @@ const NAV_LINKS = [
   { href: "/admin/products", label: "Products", icon: FiPackage },
   { href: "/admin/coupons", label: "Coupons", icon: FiTag },
   { href: "/admin/users", label: "Users", icon: FiUsers },
-  { href: "/admin/content", label: "Site Content", icon: FiEdit3 },
 ];
 
 // ---- Single nav link, active-state aware ----

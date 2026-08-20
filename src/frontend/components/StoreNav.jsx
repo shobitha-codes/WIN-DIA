@@ -2,7 +2,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { usePathname } from "next/navigation";
-import { FiHeart, FiShoppingCart, FiMenu, FiX } from "react-icons/fi";
+import { FiHeart, FiShoppingCart, FiMenu, FiX, FiGrid } from "react-icons/fi";
 import { useSelector } from "react-redux";
 import { useAuth } from "@/src/frontend/hooks/useAuth";
 import styles from "@/app/storefront.module.css";
@@ -17,8 +17,9 @@ const NAV_LINKS = [
 
 export default function StoreNav() {
   const [menuOpen, setMenuOpen] = useState(false);
-  const { user } = useAuth();
+  const { user, isAdmin, adminChecked } = useAuth();
   const pathname = usePathname();
+  const showAdminLink = user && adminChecked && isAdmin;
 
   const cartCount = useSelector((s) =>
     s.cart.cartItems.reduce((sum, item) => sum + Number(item.qty || 1), 0)
@@ -75,6 +76,14 @@ export default function StoreNav() {
             <FiShoppingCart /> {user ? cartCount : 0}
           </Link>
 
+          {/* ADMIN DASHBOARD LINK (visible only to admin accounts) */}
+          {showAdminLink && (
+            <Link href="/admin" className={styles.pill}>
+              <FiGrid />
+              Admin
+            </Link>
+          )}
+
           {/* LOGIN / PROFILE */}
           {user ? (
             <Link href="/profile" className={styles.pill}>
@@ -113,6 +122,11 @@ export default function StoreNav() {
             {link.label}
           </Link>
         ))}
+
+        {/* Mobile admin link (visible only to admin accounts) */}
+        {showAdminLink && (
+          <Link href="/admin" onClick={() => setMenuOpen(false)}>Admin Dashboard</Link>
+        )}
 
         {/* Mobile Login/Profile */}
         {user ? (
