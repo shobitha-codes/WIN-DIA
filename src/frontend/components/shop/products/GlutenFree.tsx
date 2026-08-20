@@ -36,7 +36,7 @@ type ProductRangeProps = {
   readonly heading: string;
   readonly headingId: string;
   readonly products: readonly Product[];
-  readonly theme: "gluten-free" | "everyday";
+  readonly theme: "gluten-free" | "everyday" | "combo";
 };
 
 type ProductInteraction = {

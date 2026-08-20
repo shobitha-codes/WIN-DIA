@@ -28,15 +28,15 @@ export function Hero() {
       <div className={styles.overlay} aria-hidden="true" />
 
       <HeroContent
-  heading={
-    <>
-      100% Natural
-      <br />
-      GI &lt; 44
-    </>
-  }
-  headingId="shop-hero-heading"
-/>
+        heading={
+          <>
+            100% Natural
+            <br />
+            GI &lt; 44
+          </>
+        }
+        headingId="shop-hero-heading"
+      />
     </section>
   );
 }

@@ -1,6 +1,7 @@
 import { Hero } from "@/src/frontend/components/shop/Hero";
 import { Everyday } from "@/src/frontend/components/shop/products/Everyday";
 import { GlutenFree } from "@/src/frontend/components/shop/products/GlutenFree";
+import { ComboOffer } from "@/src/frontend/components/shop/products/ComboOffer";
 
 /**
  * Fetches products for a given category slug from the internal API.
@@ -52,6 +53,7 @@ export default async function ShopPage() {
   return (
     <main>
       <Hero />
+      <ComboOffer />
       <GlutenFree products={glutenFreeProducts.length ? glutenFreeProducts : undefined} />
       <Everyday products={traditionalProducts.length ? traditionalProducts : undefined} />
     </main>

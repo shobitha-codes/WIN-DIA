@@ -4,6 +4,7 @@ import moringaImage from "@/src/frontend/assets/images/products/gluten-free/mori
 import everydayCurryLeafImage from "@/src/frontend/assets/images/products/everyday/curryleaf.png";
 import everydayGarlicImage from "@/src/frontend/assets/images/products/everyday/garlic.png";
 import everydayOnionImage from "@/src/frontend/assets/images/products/everyday/onion.png";
+import comboImage from "@/src/frontend/assets/images/products/combo/combo-offer.png";
 
 export const glutenFreeProducts = [
   {
@@ -84,6 +85,34 @@ export const everydayProducts = [
     delivery: "🚚 Free Delivery",
   },
 ] as const;
+
+export const comboOffer = {
+  id: "complete-thins-combo",
+  name: "The Complete Thins Combo",
+  title: "6 Flavours · 12 Packets",
+  flavour: "All 6 Flavours",
+  description:
+    "Get 2 packets of every WIN-DIA Thins flavour and pay for only 10 packets.",
+  flavours: [
+    "Moringa",
+    "Methi",
+    "Jeera",
+    "Garlic",
+    "Onion",
+    "Curry Leaf",
+  ],
+  image:comboImage,
+  price: "₹640",
+  offer: "12-Packet Bundle",
+  offerDetails: "🎁 Pay for 10 + Get 2 FREE",
+  delivery: "🚚 Free Delivery",
+  packetCount: 12,
+  paidPackets: 10,
+  pricePerPacket: 64,
+  regularPrice: 768,
+  comboPrice: 640,
+  savings: 128,
+} as const;
 
 type StoreProduct = {
   readonly id: string;
