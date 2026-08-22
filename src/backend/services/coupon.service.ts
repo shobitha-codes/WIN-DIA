@@ -19,6 +19,8 @@ export interface CouponService {
   calculateDiscount(dto: ApplyCouponDTO): Promise<Result<CouponCalculationResult, AppError>>;
   createCoupon(dto: CreateCouponDTO): Promise<Result<Coupon, AppError>>;
   getCouponByCode(code: string): Promise<Result<Coupon, AppError>>;
+  listCoupons(): Promise<Result<Coupon[], AppError>>;
+  updateCoupon(id: string, dto: Partial<Coupon>): Promise<Result<Coupon, AppError>>;
   incrementUsage(couponId: string): Promise<Result<Coupon, AppError>>;
 }
 
@@ -96,6 +98,19 @@ export class CouponServiceImpl implements CouponService {
       return failure(new NotFoundError(`Coupon code "${code}" not found`));
     }
     return success(couponRes.value);
+  }
+
+  public async listCoupons(): Promise<Result<Coupon[], AppError>> {
+    return this.couponRepo.findAll();
+  }
+
+  public async updateCoupon(id: string, dto: Partial<Coupon>): Promise<Result<Coupon, AppError>> {
+    const existing = await this.couponRepo.findById(id);
+    if (!existing.success) return existing;
+    if (!existing.value) {
+      return failure(new NotFoundError(`Coupon ID ${id} not found`));
+    }
+    return this.couponRepo.update(id, dto);
   }
 
   public async incrementUsage(couponId: string): Promise<Result<Coupon, AppError>> {

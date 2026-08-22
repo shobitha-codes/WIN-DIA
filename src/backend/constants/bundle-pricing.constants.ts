@@ -33,8 +33,14 @@ export const BundlePricing = {
   /** Shipping cost — always zero, free delivery on all orders */
   SHIPPING_COST: 0,
 
-  /** Tax rate (GST) applied to taxable amount */
-  TAX_RATE: 0.05,
+  /**
+   * Tax rate (GST) — deactivated for now. Customers pay exactly BUNDLE_PRICE
+   * per bundle with no separate tax line; GST is treated as already included
+   * in that price rather than added on top. Re-enable with a real rate once
+   * business confirms it and the GSTIN is configured (see
+   * app/admin/orders/page.jsx COMPANY_INFO.gstin).
+   */
+  TAX_RATE: 0,
 
   /** Minimum quantity: 1 bundle */
   MIN_BUNDLES: 1,

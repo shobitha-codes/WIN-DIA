@@ -135,11 +135,12 @@ export default function OrderConfirmationPage() {
                 <div className={styles.bRow}><span>Items</span><span>₹{order.items_price?.toFixed(2)}</span></div>
                 {order.discount_price > 0 && <div className={`${styles.bRow} ${styles.bGreen}`}><span>Discount</span><span>−₹{order.discount_price?.toFixed(2)}</span></div>}
                 <div className={styles.bRow}><span>Shipping</span><span className={order.shipping_price === 0 ? styles.free : ""}>{order.shipping_price === 0 ? "FREE" : `₹${order.shipping_price?.toFixed(2)}`}</span></div>
-                <div className={styles.bRow}><span>Tax</span><span>₹{order.tax_price?.toFixed(2)}</span></div>
+                {/* Older orders placed before GST was deactivated may still have a non-zero tax_price on record. */}
+                {order.tax_price > 0 && <div className={styles.bRow}><span>Tax</span><span>₹{order.tax_price?.toFixed(2)}</span></div>}
               </div>
 
               <div className={styles.totalRow}>
-                <span>Total Paid</span>
+                <span>Total Paid <small style={{ fontWeight: 400, opacity: 0.7 }}>(GST included)</small></span>
                 <span>₹{order.total_price?.toFixed(2)}</span>
               </div>
 
@@ -179,7 +180,7 @@ export default function OrderConfirmationPage() {
               <Link href="/shop" className={styles.shopBtn}>
                 <FiShoppingBag /> Continue Shopping
               </Link>
-              <Link href="/account/orders" className={styles.ordersBtn}>
+              <Link href="/profile/orders" className={styles.ordersBtn}>
                 View All Orders <FiArrowRight />
               </Link>
             </motion.div>

@@ -33,8 +33,9 @@ export default function CartPage() {
   const subtotal = cartItems.reduce((a, i) => a + i.price * i.qty, 0);
   const discount = promoApplied ? subtotal * 0.1 : 0;
   const shipping = 0; // FREE DELIVERY — always ₹0
-  const tax = (subtotal - discount) * 0.05;
-  const total = subtotal - discount + tax + shipping;
+  // GST is deactivated: no separate tax line is added. Price shown already
+  // includes GST rather than adding it on top — see bundle-pricing.constants.ts.
+  const total = subtotal - discount + shipping;
   const progress = 100; // Always free shipping
   const remaining = 0;
 
@@ -213,11 +214,10 @@ export default function CartPage() {
                 <div className={styles.bRow}><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
                 {promoApplied && <div className={`${styles.bRow} ${styles.bDiscount}`}><span>Discount</span><span>−₹{discount.toFixed(2)}</span></div>}
                 <div className={styles.bRow}><span>Shipping</span><span className={shipping === 0 ? styles.free : ""}>{shipping === 0 ? "FREE" : `₹${shipping}`}</span></div>
-                <div className={styles.bRow}><span>GST (5%)</span><span>₹{tax.toFixed(2)}</span></div>
               </div>
 
               <div className={styles.totalRow}>
-                <span>Total</span>
+                <span>Total <small style={{ fontWeight: 400, opacity: 0.7 }}>(GST included)</small></span>
                 <span>₹{total.toFixed(2)}</span>
               </div>
 

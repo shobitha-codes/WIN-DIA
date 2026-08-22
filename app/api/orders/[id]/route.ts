@@ -34,3 +34,40 @@ export async function GET(
     );
   }
 }
+
+/**
+ * Customer-initiated order cancellation. Body: { action: 'cancel', reason?: string }.
+ * Ownership is enforced inside OrderService.cancelOrder (via getOrderById's userId check),
+ * and the underlying status-transition rules (order.service.ts STATUS_TRANSITIONS) still
+ * apply — cancellation is only allowed from placed/confirmed/processing, not after shipped.
+ */
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const authRes = await getAuthUserContext(request);
+    if (!authRes.success) {
+      return handleServiceResult(authRes);
+    }
+
+    const body = await request.json().catch(() => ({}));
+    if (body.action !== 'cancel') {
+      return NextResponse.json(
+        createErrorResponse('VALIDATION_ERROR', 'Unsupported action'),
+        { status: 400 }
+      );
+    }
+
+    const orderService = authRes.value.scope.resolve<OrderService>(ServiceTokens.OrderService);
+    const result = await orderService.cancelOrder(id, authRes.value.id, body.reason);
+
+    return handleServiceResult(result);
+  } catch (err: any) {
+    return NextResponse.json(
+      createErrorResponse('INTERNAL_SERVER_ERROR', err.message || 'An unexpected error occurred'),
+      { status: 500 }
+    );
+  }
+}

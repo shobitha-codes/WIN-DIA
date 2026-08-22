@@ -5,9 +5,9 @@ import { OrderService } from '@/src/backend/services/order.service';
 import { InventoryService } from '@/src/backend/services/inventory.service';
 import { PaymentRepository } from '@/src/backend/repositories/payment.repository';
 import { OrderItemRepository } from '@/src/backend/repositories/order-item.repository';
-import { OrderStatus } from '@/src/backend/enums/entity.enums';
 import { getAuthUserContext, handleServiceResult } from '@/src/backend/utils/route-helper.util';
 import { createErrorResponse } from '@/src/backend/types/api-response.types';
+import { autoBookShipment } from '@/src/backend/services/auto-shipment.util';
 
 export const runtime = 'nodejs';
 
@@ -83,7 +83,11 @@ export async function POST(request: Request) {
     }
 
     await paymentService.processSuccessfulPayment(paymentId, razorpay_payment_id, body);
-    await orderService.updateOrderStatus(orderId, OrderStatus.PROCESSING, 'Payment verified via Razorpay client SDK', authRes.value.id);
+    // markOrderPaid updates BOTH order_status and payment_status together —
+    // updateOrderStatus alone only ever touched order_status, which is why
+    // payment_status stayed "pending" in the admin dashboard even after a
+    // successful client-side payment (it only got fixed if the webhook fired).
+    await orderService.markOrderPaid(orderId, 'Payment verified via Razorpay client SDK', authRes.value.id);
 
     // Fetch order_items directly from the order_items table using order_id.
     // getOrderById only returns the orders row (no join) — it never contains order_items.
@@ -105,6 +109,12 @@ export async function POST(request: Request) {
     } else if (!itemsRes.success) {
       console.error(`[payment/verify] Could not load order_items for order ${orderId}:`, itemsRes.error.message);
     }
+
+    // Payment is confirmed — book the Shiprocket shipment automatically.
+    // Non-fatal: the customer's payment already succeeded, so a shipping
+    // booking hiccup must not fail this response. If it fails, the admin's
+    // "Retry shipment" button (app/admin/orders) is the manual fallback.
+    await autoBookShipment(orderId, '[payment/verify]');
 
     return NextResponse.json({
       success: true,

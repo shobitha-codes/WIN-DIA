@@ -16,6 +16,7 @@ import { OrderRepository } from '../repositories/order.repository';
 import { logger } from '../utils/logger.util';
 import { container, RepositoryTokens, ServiceTokens } from '../providers/container.provider';
 import { BundlePricing, calculateBundlePricing, calculateOrderTotal } from '../constants/bundle-pricing.constants';
+import { autoBookShipment } from './auto-shipment.util';
 
 export interface CheckoutResult {
   order: Order;
@@ -550,6 +551,14 @@ export class CheckoutServiceImpl implements CheckoutService {
 
       // STEP 9: CLEAR_CART & INCREMENT COUPON USAGE
       await this.finalizeCartAndCoupon(userId, validatedCouponId);
+
+      // COD orders have no payment to wait for, so book the Shiprocket
+      // shipment right away. Online (Razorpay) orders instead get booked
+      // automatically once payment is confirmed — see autoBookShipment calls
+      // in app/api/payment/verify and PaymentService.handleWebhook.
+      if (selectedPaymentMethod === 'cod') {
+        await autoBookShipment(createdOrder.id, '[CheckoutService.processCheckout:COD]');
+      }
 
       const totalProcessTime = Date.now() - startTime;
       console.log(`--- [CHECKOUT_SERVICE: EXIT_SUCCESS] Total Time: ${totalProcessTime}ms | OrderNumber: ${createdOrder.order_number} ---\n`);

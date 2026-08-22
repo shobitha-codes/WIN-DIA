@@ -66,7 +66,7 @@ export default function ProfileSidebar({ profile }) {
     { href: '/profile', label: 'Profile', icon: icons.profile },
     { href: '/profile/addresses', label: 'Addresses', icon: icons.address },
     { href: '/wishlist', label: 'Wishlist', icon: icons.wishlist },
-    { href: '/account/orders', label: 'Orders', icon: icons.orders },
+    { href: '/profile/orders', label: 'Orders', icon: icons.orders },
   ];
 
   return (

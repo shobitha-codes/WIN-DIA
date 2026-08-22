@@ -114,8 +114,9 @@ export default function CheckoutPage() {
   const subtotal = checkoutItems.reduce((a, i) => a + i.price * i.qty, 0);
   const discount = couponApplied ? subtotal * 0.1 : 0;
   const shipping = 0; // FREE DELIVERY — always ₹0, enforced server-side
-  const tax = (subtotal - discount) * 0.05;
-  const total = subtotal - discount + tax + shipping;
+  // GST is deactivated: no separate tax line is added. Price shown already
+  // includes GST rather than adding it on top — see bundle-pricing.constants.ts.
+  const total = subtotal - discount + shipping;
 
   const handleSaveAddress = async () => {
     const errors = validateAddress(form);
@@ -143,9 +144,9 @@ export default function CheckoutPage() {
         }),
       });
       const data = await res.json();
-      if (data.error) {
-        saveLocalAddress();
-        toast.success("Address saved for checkout");
+      if (!res.ok || data.error) {
+        // Real save failure — tell the user, don't silently pretend it worked.
+        toast.error(data.error || "Could not save address. Please try again.");
         return;
       }
       const addr = data.address;
@@ -168,8 +169,7 @@ export default function CheckoutPage() {
       setFormErrors({});
       toast.success("Address saved!");
     } catch {
-      saveLocalAddress();
-      toast.success("Address saved for checkout");
+      toast.error("Could not save address. Please check your connection and try again.");
     }
   };
 
@@ -238,9 +238,38 @@ export default function CheckoutPage() {
             else toast.error(vData.error || "Payment verification failed");
           } finally { setPlacing(false); }
         },
-        modal: { ondismiss: () => { setPlacing(false); toast("Payment cancelled"); } },
+        modal: {
+          ondismiss: async () => {
+            // User closed the Razorpay popup without paying. Mark the order as
+            // cancelled instead of leaving it stuck at "placed / pending" forever
+            // with no way to tell it apart from a genuinely in-progress order.
+            try {
+              await authFetch(`/api/orders/${data.order.id}`, {
+                method: "PATCH",
+                body: JSON.stringify({ action: "cancel", reason: "Payment cancelled by customer" }),
+              });
+            } catch {
+              // Best-effort — even if this fails, don't block the UI on it.
+            } finally {
+              setPlacing(false);
+              toast("Payment cancelled — order was not placed");
+            }
+          },
+        },
       });
-      rzp.on("payment.failed", () => { setPlacing(false); toast.error("Payment failed"); });
+      rzp.on("payment.failed", async () => {
+        try {
+          await authFetch(`/api/orders/${data.order.id}`, {
+            method: "PATCH",
+            body: JSON.stringify({ action: "cancel", reason: "Payment failed" }),
+          });
+        } catch {
+          // Best-effort.
+        } finally {
+          setPlacing(false);
+          toast.error("Payment failed — order was cancelled");
+        }
+      });
       rzp.open();
     } catch { toast.error("Something went wrong"); setPlacing(false); }
   };
@@ -476,11 +505,10 @@ export default function CheckoutPage() {
                 <div className={styles.bRow}><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
                 {couponApplied && <div className={`${styles.bRow} ${styles.bDiscount}`}><span>Discount (10%)</span><span>−₹{discount.toFixed(2)}</span></div>}
                 <div className={styles.bRow}><span>Shipping</span><span className={styles.free}>FREE</span></div>
-                <div className={styles.bRow}><span>GST (5%)</span><span>₹{tax.toFixed(2)}</span></div>
               </div>
 
               <div className={styles.totalRow}>
-                <span>Total</span>
+                <span>Total <small style={{ fontWeight: 400, opacity: 0.7 }}>(GST included)</small></span>
                 <span>₹{total.toFixed(2)}</span>
               </div>
 

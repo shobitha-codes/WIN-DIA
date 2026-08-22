@@ -1,0 +1,147 @@
+.orders-list {
+  overflow-y: auto;
+  max-height: 340px;
+  padding-right: 4px;
+}
+
+.order-card {
+  background: #fff;
+  border: 1px solid #EFE8DE;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  transition: box-shadow 0.25s ease, transform 0.2s ease;
+}
+
+.order-card:hover {
+  box-shadow: 0 8px 20px rgba(122, 90, 68, 0.12);
+  transform: translateY(-1px);
+}
+
+.order-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.order-number-link {
+  color: #5A4030;
+  font-size: 13px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-decoration: none;
+}
+
+.order-number-link:hover {
+  text-decoration: underline;
+}
+
+.order-status-badge {
+  flex-shrink: 0;
+  font-size: 10px;
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border-radius: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.order-status-placed,
+.order-status-confirmed {
+  background: #FEF3C7;
+  color: #92400E;
+}
+
+.order-status-processing {
+  background: #EDE9FE;
+  color: #5B21B6;
+}
+
+.order-status-shipped {
+  background: #CFFAFE;
+  color: #0E7490;
+}
+
+.order-status-delivered {
+  background: #D1FAE5;
+  color: #065F46;
+}
+
+.order-status-cancelled {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+.order-meta-line {
+  color: #7A5A44;
+  opacity: 0.75;
+  font-size: 12.5px;
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 8px 0 12px;
+  line-height: 1.5;
+}
+
+.order-actions {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 12px;
+}
+
+.order-action-link {
+  color: #7A5A44;
+  text-decoration: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+.order-action-link:hover {
+  color: #5A4030;
+  text-decoration: underline;
+}
+
+.order-cancel-btn {
+  color: #a33d3d;
+  background: none;
+  border: 1px solid #E6DDD0;
+  border-radius: 8px;
+  padding: 5px 14px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.order-cancel-btn:hover {
+  border-color: #a33d3d;
+  background: #FEF2F2;
+}
+
+.order-cancel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.orders-empty {
+  color: #7A5A44;
+  opacity: 0.55;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 13px;
+  text-align: center;
+  padding: 60px 0;
+}
+
+@media (max-width: 640px) {
+  .orders-list {
+    max-height: none;
+  }
+
+  .order-card-top {
+    flex-wrap: wrap;
+  }
+}

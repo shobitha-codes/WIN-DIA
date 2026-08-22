@@ -14,6 +14,7 @@ import { logger } from '../utils/logger.util';
 import { container, RepositoryTokens, ServiceTokens } from '../providers/container.provider';
 import { getRazorpayClient } from '../lib/razorpay.js';
 import { PaymentError } from '../errors/domain-errors';
+import { autoBookShipment } from './auto-shipment.util';
 
 const RAZORPAY_CURRENCY = 'INR';
 
@@ -356,6 +357,13 @@ export class PaymentServiceImpl implements PaymentService {
     } as any);
 
     await this.deductStockForOrder(orderId);
+
+    // Payment confirmed via webhook (may arrive before or instead of the
+    // client-side verify call, e.g. if the user closed their browser) —
+    // book the Shiprocket shipment automatically here too. autoBookShipment
+    // is idempotent (checks order.awb_code first), so this is safe even if
+    // payment/verify already booked it.
+    await autoBookShipment(orderId, '[PaymentService.handleWebhook]');
   }
 
   /**
