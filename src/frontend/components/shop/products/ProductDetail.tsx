@@ -9,6 +9,7 @@ import { useDispatch } from "react-redux";
 
 import { addToCart } from "@/src/frontend/redux/slices/cartSlice";
 import { addToWishlist, removeFromWishlist } from "@/src/frontend/redux/slices/wishlistSlice";
+import { supabase } from "@/src/frontend/lib/supabase/client";
 
 import { ProductCard } from "./ProductCard";
 import { findProductByRouteId, getRecommendations } from "./productLookup";
@@ -49,17 +50,28 @@ function ProductDetailContent({ product, theme, routeId }: { product: Product; t
   const [recQuantities, setRecQuantities] = useState<Record<string, number>>({});
   const [recWishlisted, setRecWishlisted] = useState<Record<string, boolean>>({});
 
-  const setQuantity = (next: number) => {
+  const requireAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push(`/login?next=/product/${routeId}`);
+      return false;
+    }
+    return true;
+  };
+
+  const setQuantity = async (next: number) => {
     const nextQuantity = Math.max(0, next);
     if (nextQuantity > quantity) {
+      if (!(await requireAuth())) return;
       dispatch(addToCart(toStoreProduct(product, theme), nextQuantity - quantity));
       toast.success("Added to cart");
     }
     setQuantityState(nextQuantity);
   };
 
-  const toggleWishlist = () => {
+  const toggleWishlist = async () => {
     const next = !isWishlisted;
+    if (next && !(await requireAuth())) return;
     const storeProduct = toStoreProduct(product, theme);
     if (next) {
       dispatch(addToWishlist(storeProduct));
@@ -71,7 +83,8 @@ function ProductDetailContent({ product, theme, routeId }: { product: Product; t
     setIsWishlisted(next);
   };
 
-  const buyNow = () => {
+  const buyNow = async () => {
+    if (!(await requireAuth())) return;
     dispatch(addToCart(toStoreProduct(product, theme), 1));
     toast.success("Added to cart");
     router.push("/checkout");
@@ -79,18 +92,20 @@ function ProductDetailContent({ product, theme, routeId }: { product: Product; t
 
   const recommendations = getRecommendations(routeId, theme, 4);
 
-  const setRecQuantity = (recRouteId: string, recProduct: Product, recTheme: ProductTheme, next: number) => {
+  const setRecQuantity = async (recRouteId: string, recProduct: Product, recTheme: ProductTheme, next: number) => {
     const nextQuantity = Math.max(0, next);
     const current = recQuantities[recRouteId] ?? 0;
     if (nextQuantity > current) {
+      if (!(await requireAuth())) return;
       dispatch(addToCart(toStoreProduct(recProduct, recTheme), nextQuantity - current));
       toast.success("Added to cart");
     }
     setRecQuantities((q) => ({ ...q, [recRouteId]: nextQuantity }));
   };
 
-  const toggleRecWishlist = (recRouteId: string, recProduct: Product, recTheme: ProductTheme) => {
+  const toggleRecWishlist = async (recRouteId: string, recProduct: Product, recTheme: ProductTheme) => {
     const next = !recWishlisted[recRouteId];
+    if (next && !(await requireAuth())) return;
     const storeProduct = toStoreProduct(recProduct, recTheme);
     if (next) {
       dispatch(addToWishlist(storeProduct));

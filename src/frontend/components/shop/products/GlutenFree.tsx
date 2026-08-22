@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useDispatch } from "react-redux";
 
 import { glutenFreeProducts } from "@/src/frontend/data/products";
 import { addToCart } from "@/src/frontend/redux/slices/cartSlice";
 import { addToWishlist, removeFromWishlist } from "@/src/frontend/redux/slices/wishlistSlice";
+import { supabase } from "@/src/frontend/lib/supabase/client";
 
 import { ProductCard } from "./ProductCard";
 import { toStoreProduct, type Product, type ProductTheme } from "./productShared";
@@ -29,26 +31,41 @@ type ProductRangeProps = {
  *
  * Clicking a card now takes you to a full /product/[id] page (see
  * ProductDetail.tsx) instead of opening a modal.
+ *
+ * Adding to cart/wishlist requires a logged-in Supabase session — if
+ * there's no user, the click redirects to /login instead of dispatching.
  */
 export function ProductRange({ heading, headingId, products, theme }: ProductRangeProps) {
   const dispatch = useDispatch();
+  const router = useRouter();
   const [quantities, setQuantities] = useState<Record<string, number>>(() =>
     Object.fromEntries(products.map((p) => [p.id, 0]))
   );
   const [wishlisted, setWishlisted] = useState<Record<string, boolean>>({});
 
-  const setQuantity = (product: Product, next: number) => {
+  const requireAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      router.push("/login?next=/shop");
+      return false;
+    }
+    return true;
+  };
+
+  const setQuantity = async (product: Product, next: number) => {
     const nextQuantity = Math.max(0, next);
     const current = quantities[product.id] ?? 0;
     if (nextQuantity > current) {
+      if (!(await requireAuth())) return;
       dispatch(addToCart(toStoreProduct(product, theme), nextQuantity - current));
       toast.success("Added to cart");
     }
     setQuantities((q) => ({ ...q, [product.id]: nextQuantity }));
   };
 
-  const toggleWishlist = (product: Product) => {
+  const toggleWishlist = async (product: Product) => {
     const next = !wishlisted[product.id];
+    if (next && !(await requireAuth())) return;
     const storeProduct = toStoreProduct(product, theme);
     if (next) {
       dispatch(addToWishlist(storeProduct));
