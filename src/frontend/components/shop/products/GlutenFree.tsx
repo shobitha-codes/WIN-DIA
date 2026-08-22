@@ -83,7 +83,18 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
   );
 }
 
-/** Gluten-free product range — unchanged export, same data import as before. */
-export function GlutenFree() {
-  return <ProductRange heading="Health & Wellness" headingId="gluten-free-heading" products={glutenFreeProducts} theme="gluten-free" />;
+type GlutenFreeProps = {
+  readonly products?: readonly Product[];
+};
+
+/** Gluten-free product range — accepts an optional products override, falls back to the default list. */
+export function GlutenFree({ products }: GlutenFreeProps) {
+  return (
+    <ProductRange
+      heading="Health & Wellness"
+      headingId="gluten-free-heading"
+      products={products ?? glutenFreeProducts}
+      theme="gluten-free"
+    />
+  );
 }
