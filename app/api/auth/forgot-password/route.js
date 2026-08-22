@@ -43,13 +43,21 @@ export async function POST(request) {
       return NextResponse.json({ error: otpError.message }, { status: 400 });
     }
 
-    await sendOtpEmail({ to: email, otp, purpose: 'reset_password' });
+    try {
+      await sendOtpEmail({ to: email, otp, purpose: 'reset_password' });
+    } catch (emailErr) {
+      console.error('Forgot-password route: OTP email send failed:', emailErr);
+      return NextResponse.json(
+        { error: 'Could not send the reset email. Please try again shortly.' },
+        { status: 502 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (err) {
     console.error('Forgot-password route error:', err);
     return NextResponse.json(
-      { error: err.message || 'Something went wrong. Please try again.' },
+      { error: (err && err.message) || 'Something went wrong. Please try again.' },
       { status: 500 }
     );
   }

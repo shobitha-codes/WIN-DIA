@@ -100,7 +100,7 @@ export default function Footer() {
               </li>
 
               <li>
-                <Link href="/account">
+                <Link href="/profile/orders">
                   Track Order
                 </Link>
               </li>

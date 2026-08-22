@@ -26,10 +26,10 @@ export async function GET() {
       .maybeSingle();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ profile });
+    return NextResponse.json({ success: true, profile });
   } catch (err) {
     console.error('Profile GET error:', err);
     return NextResponse.json(
@@ -50,32 +50,38 @@ export async function PUT(request) {
 
     const { full_name, phone } = await request.json();
 
+    /* === Validate phone format (10-digit Indian mobile) === */
+    const normalizedPhone = phone ? phone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '') : phone;
+    if (normalizedPhone && !/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      return NextResponse.json({ success: false, error: 'Enter a valid 10-digit mobile number.' }, { status: 400 });
+    }
+
     /* === Reject if phone is taken by someone else === */
-    if (phone) {
+    if (normalizedPhone) {
       const { data: existing } = await supabaseAdmin
         .from('profiles')
         .select('id')
-        .eq('phone', phone)
+        .eq('phone', normalizedPhone)
         .neq('id', user.id)
         .maybeSingle();
 
       if (existing) {
-        return NextResponse.json({ error: 'This phone number is already in use.' }, { status: 409 });
+        return NextResponse.json({ success: false, error: 'This phone number is already in use.' }, { status: 409 });
       }
     }
 
     const { data: updated, error } = await supabaseAdmin
       .from('profiles')
-      .update({ full_name, phone, updated_at: new Date().toISOString() })
+      .update({ full_name, phone: normalizedPhone, updated_at: new Date().toISOString() })
       .eq('id', user.id)
       .select()
       .maybeSingle();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ profile: updated });
+    return NextResponse.json({ success: true, profile: updated });
   } catch (err) {
     console.error('Profile PUT error:', err);
     return NextResponse.json(

@@ -5,6 +5,11 @@ import { generateOtp, getOtpExpiry } from '@/lib/auth/otp';
 import { sendOtpEmail } from '@/lib/email/sendOtpEmail';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Indian mobile numbers: exactly 10 digits, starting with 6-9.
+const PHONE_REGEX = /^[6-9]\d{9}$/;
+// Must contain at least one letter AND at least one digit, 8+ characters.
+const PASSWORD_HAS_LETTER = /[A-Za-z]/;
+const PASSWORD_HAS_DIGIT = /\d/;
 
 export async function POST(request) {
   try {
@@ -17,11 +22,15 @@ export async function POST(request) {
     if (!email || !EMAIL_REGEX.test(email)) {
       return NextResponse.json({ error: 'Please enter a valid email address.' }, { status: 400 });
     }
-    if (!phone?.trim()) {
-      return NextResponse.json({ error: 'Phone number is required.' }, { status: 400 });
+    const normalizedPhone = (phone || '').replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '');
+    if (!PHONE_REGEX.test(normalizedPhone)) {
+      return NextResponse.json({ error: 'Enter a valid 10-digit mobile number.' }, { status: 400 });
     }
     if (!password || password.length < 8) {
       return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
+    }
+    if (!PASSWORD_HAS_LETTER.test(password) || !PASSWORD_HAS_DIGIT.test(password)) {
+      return NextResponse.json({ error: 'Password must contain both letters and numbers.' }, { status: 400 });
     }
 
     // TODO: add rate limiting per IP/email (e.g. Upstash Ratelimit) to prevent
@@ -40,7 +49,7 @@ export async function POST(request) {
     const { data: existingProfile } = await supabaseAdmin
       .from('profiles')
       .select('id')
-      .or(`email.eq.${email},phone.eq.${phone}`)
+      .or(`email.eq.${email},phone.eq.${normalizedPhone}`)
       .maybeSingle();
 
     let userId;
@@ -109,7 +118,7 @@ export async function POST(request) {
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .upsert(
-        { id: userId, full_name, email, phone },
+        { id: userId, full_name, email, phone: normalizedPhone },
         { onConflict: 'id' }
       );
 
@@ -132,13 +141,32 @@ export async function POST(request) {
       return NextResponse.json({ error: otpError.message }, { status: 400 });
     }
 
-    await sendOtpEmail({ to: email, otp, purpose: 'register' });
+    /* === Send the OTP email. The account/profile/OTP row are already saved
+       at this point, so an email failure here must NOT look like the whole
+       registration failed — that leaves a half-created account with no way
+       for the user to get a code. Report it clearly instead. === */
+    try {
+      await sendOtpEmail({ to: email, otp, purpose: 'register' });
+    } catch (emailErr) {
+      console.error('Register route: OTP email send failed:', emailErr);
+      return NextResponse.json(
+        {
+          error:
+            'Your account was created, but we could not send the verification email. ' +
+            'Please try "Resend OTP" in a moment, or contact support if this keeps happening.',
+          userId,
+          email,
+          emailFailed: true,
+        },
+        { status: 502 }
+      );
+    }
 
     return NextResponse.json({ userId, email });
   } catch (err) {
     console.error('Register route error:', err);
     return NextResponse.json(
-      { error: err.message || 'Something went wrong. Please try again.' },
+      { error: (err && err.message) || 'Something went wrong. Please try again.' },
       { status: 500 }
     );
   }

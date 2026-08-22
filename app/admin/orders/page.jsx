@@ -195,7 +195,7 @@ function OrderRow({ order }) {
           style={{ fontSize: "12px", padding: "6px 12px" }}
           onClick={() => generateShippingLabel(order)}
         >
-          📦 Download Label
+          📦 Label
         </button>
       </td>
     </tr>
@@ -262,7 +262,9 @@ export default function AdminOrdersPage() {
       <div className={styles.toolbar}>
         <div>
           <h1 className={styles.topTitle}>Orders</h1>
-          <p className={styles.muted}>View orders and download shipping labels.</p>
+          <p className={styles.muted}>
+            Orders update automatically — payment confirmation and shipment booking both happen without any action needed here. Download labels below.
+          </p>
         </div>
       </div>
 

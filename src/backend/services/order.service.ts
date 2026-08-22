@@ -48,6 +48,8 @@ export interface OrderService {
   getUserOrders(userId: string, options?: { page?: number; pageSize?: number }): Promise<Result<{ items: Order[]; total: number }, AppError>>;
   updateOrderStatus(orderId: string, status: OrderStatus, note?: string, updatedBy?: string): Promise<Result<Order, AppError>>;
   writeStatusHistory(orderId: string, status: OrderStatus, note?: string, createdBy?: string): Promise<Result<OrderStatusHistory, AppError>>;
+  cancelOrder(orderId: string, userId: string, reason?: string): Promise<Result<Order, AppError>>;
+  markOrderPaid(orderId: string, note?: string, updatedBy?: string): Promise<Result<Order, AppError>>;
 }
 
 export class OrderServiceImpl implements OrderService {
@@ -217,5 +219,62 @@ export class OrderServiceImpl implements OrderService {
       order_id: orderId,
       status,
     });
+  }
+
+  /**
+   * Marks an order's payment_status as PAID and advances order_status to
+   * PROCESSING, in one place. The client-side Razorpay verify flow
+   * (app/api/payment/verify/route.ts) previously only called
+   * updateOrderStatus(), which updates order_status but never touches
+   * payment_status — so orders stayed stuck on "pending" in the admin
+   * dashboard forever unless the Razorpay webhook happened to fire and
+   * update it separately. This keeps both fields in sync for every
+   * successful-payment code path.
+   */
+  public async markOrderPaid(orderId: string, note?: string, updatedBy?: string): Promise<Result<Order, AppError>> {
+    const statusRes = await this.updateOrderStatus(orderId, OrderStatus.PROCESSING, note, updatedBy);
+    if (!statusRes.success) return statusRes;
+
+    const paymentUpdateRes = await this.orderRepo.update(orderId, { payment_status: PaymentStatus.PAID });
+    if (!paymentUpdateRes.success) return paymentUpdateRes;
+
+    return success(paymentUpdateRes.value);
+  }
+
+  /**
+   * Customer-initiated cancellation. Only the order's owner may call this
+   * (ownership is enforced via getOrderById's userId check). Reuses the same
+   * transition/stock-restoration logic as the admin path via updateOrderStatus,
+   * and additionally marks payment_status as FAILED when the customer backed
+   * out before ever completing payment (e.g. closed the Razorpay checkout),
+   * so an abandoned order doesn't sit forever looking like a live, pending
+   * payment — this is what previously showed as "Placed / Pending" with no
+   * way to distinguish it from a genuinely in-progress order.
+   */
+  public async cancelOrder(orderId: string, userId: string, reason?: string): Promise<Result<Order, AppError>> {
+    const existing = await this.getOrderById(orderId, userId);
+    if (!existing.success) return existing;
+
+    const updateRes = await this.updateOrderStatus(
+      orderId,
+      OrderStatus.CANCELLED,
+      reason || 'Cancelled by customer',
+      userId
+    );
+    if (!updateRes.success) return updateRes;
+
+    // If payment never completed, reflect that explicitly instead of leaving
+    // it stuck on "pending" indefinitely. If it was already paid, leave the
+    // payment_status as PAID — refunding is a separate admin-initiated step.
+    if (updateRes.value.payment_status === PaymentStatus.PENDING) {
+      const paymentUpdateRes = await this.orderRepo.update(orderId, { payment_status: PaymentStatus.FAILED });
+      if (paymentUpdateRes.success) {
+        return success(paymentUpdateRes.value);
+      }
+      // Non-fatal: the order is cancelled either way, just log and return what we have.
+      logger.error(`[OrderService.cancelOrder] Could not update payment_status for order ${orderId}: ${paymentUpdateRes.error.message}`);
+    }
+
+    return success(updateRes.value);
   }
 }

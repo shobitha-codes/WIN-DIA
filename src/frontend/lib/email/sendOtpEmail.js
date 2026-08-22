@@ -1,13 +1,27 @@
 import nodemailer from 'nodemailer';
 
-/* === Gmail SMTP transporter === */
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_APP_PASSWORD,
-  },
-});
+/* === Gmail SMTP transporter — created lazily so a missing config throws a
+   clear, readable error instead of nodemailer's cryptic
+   "Missing credentials for 'PLAIN'" once sendMail() is actually called. === */
+let cachedTransporter = null;
+function getTransporter() {
+  if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+    throw new Error(
+      'Email sending is not configured (GMAIL_USER / GMAIL_APP_PASSWORD missing). ' +
+      'Set these in your .env to enable OTP emails.'
+    );
+  }
+  if (!cachedTransporter) {
+    cachedTransporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD,
+      },
+    });
+  }
+  return cachedTransporter;
+}
 
 const SUBJECT_BY_PURPOSE = {
   register: 'Verify your WINDIA account',
@@ -41,7 +55,7 @@ export async function sendOtpEmail({ to, otp, purpose }) {
     </div>
   `;
 
-  await transporter.sendMail({
+  await getTransporter().sendMail({
     from: `"WINDIA" <${process.env.GMAIL_USER}>`,
     to,
     subject,
