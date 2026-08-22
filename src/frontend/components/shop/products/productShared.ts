@@ -6,13 +6,16 @@ import type { StaticImageData } from "next/image";
  * price, plus the optional offer/delivery/rating/review fields).
  * Every file that touches a product (cards, grid, detail page) imports
  * this one type so they can never drift out of sync with each other.
+ *
+ * `image` can be either a locally-imported StaticImageData (static product
+ * data) or a plain string URL (products fetched from the API/Supabase).
  */
 export type Product = {
   readonly id: string;
   readonly title: string;
   readonly name: string;
   readonly flavour: string;
-  readonly image: StaticImageData;
+  readonly image: StaticImageData | string;
   readonly description: string;
   readonly price: string;
   readonly offer?: string;
@@ -55,7 +58,9 @@ export function toStoreProduct(product: Product, theme: ProductTheme) {
     // price comes in as a display string like "₹249" — strip everything
     // that isn't a digit or a decimal point so redux gets a plain number.
     price: Number(product.price.replace(/[^0-9.]/g, "")),
-    image: product.image.src,
+    // image may be a locally-imported StaticImageData or an API URL string —
+    // normalize to a plain string either way.
+    image: typeof product.image === "string" ? product.image : product.image.src,
     countInStock: 100,
     netWeight: 200,
   };
