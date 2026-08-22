@@ -1,0 +1,189 @@
+.section {
+  background: #fff3e9;
+  color: #5a341a;
+  min-height: 100vh;
+  padding: clamp(2.5rem, 5vw, 4.5rem) clamp(1.25rem, 4vw, 4.5rem) 5rem;
+}
+
+.detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(1.5rem, 4vw, 3.5rem);
+  max-width: 68rem;
+  margin: 0 auto;
+}
+
+.detailImage {
+  position: relative;
+  min-height: 32rem;
+  background: #f2e2d2;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.detailImage img { object-fit: cover; object-position: center; }
+
+.detailContent { padding-top: 0.5rem; }
+
+.infoEyebrow {
+  margin: 0;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: #8a5b34;
+}
+
+.infoName {
+  margin: 0.3rem 0 0;
+  font-family: "The Seasons", "Bodoni MT", Didot, "Iowan Old Style", serif;
+  font-size: clamp(2.1rem, 3.4vw, 3rem);
+  font-weight: 400;
+  line-height: 0.98;
+}
+
+.flavour { margin: 0.6rem 0 0; font-size: 0.98rem; }
+
+.ratingRow {
+  margin: 0.5rem 0 0;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.85rem;
+}
+
+.reviewCount { color: #8a5b34; }
+
+.description {
+  margin: 1rem 0 0;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  max-width: 34rem;
+}
+
+.detailPrice { margin: 1rem 0 0; font-weight: 500; font-size: 1.6rem; }
+
+.offerDetails, .delivery {
+  margin: 0.4rem 0 0;
+  font-size: 0.92rem;
+  font-weight: 500;
+}
+
+.reviewList { margin: 1.25rem 0 0; padding: 0; list-style: none; max-width: 34rem; }
+
+.review {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 0.5px solid rgba(90, 52, 26, 0.15);
+  font-size: 0.92rem;
+  line-height: 1.35;
+}
+
+.detailActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 2rem;
+}
+
+.wishlistButton {
+  display: grid;
+  width: 2.6rem;
+  aspect-ratio: 1;
+  padding: 0;
+  color: #5a341a;
+  background: #ffffff;
+  border: 0.5px solid rgba(90, 52, 26, 0.2);
+  border-radius: 50%;
+  font-size: 1.1rem;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 140ms ease;
+  &:hover, &:focus-visible { transform: scale(1.06); }
+  &:focus-visible { outline: 2px solid #5a341a; outline-offset: 2px; }
+}
+
+.wishlistActive { color: #a63d2d; }
+
+.addToCartButton, .quantityControl {
+  flex: 1 1 10rem;
+  color: #fff3e9;
+  background: #5a341a;
+  border: 1px solid #5a341a;
+  border-radius: 8px;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.addToCartButton {
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+  &:hover, &:focus-visible { background: #402512; }
+  &:focus-visible { outline: 2px solid #5a341a; outline-offset: 2px; }
+}
+
+.quantityControl {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+}
+
+.quantityControl button {
+  height: 2.6rem;
+  padding: 0;
+  color: #fff3e9;
+  background: transparent;
+  border: 0;
+  font-size: 1.2rem;
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid #fff3e9; outline-offset: -2px; }
+}
+.quantityControl span { text-align: center; font-size: 0.9rem; }
+
+.buyNowButton { background: #7a2e22; border-color: #7a2e22; &:hover, &:focus-visible { background: #5c211a; } }
+
+/* Not found state */
+.notFound { max-width: 34rem; margin: 0 auto; text-align: center; }
+.backLink {
+  display: inline-block;
+  margin-top: 1.5rem;
+  color: #5a341a;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+/* Recommendations */
+.recommendations {
+  max-width: 68rem;
+  margin: clamp(3.5rem, 6vw, 5.5rem) auto 0;
+}
+
+.recommendationsHeading {
+  margin: 0 0 1.25rem;
+  font-family: "The Seasons", "Bodoni MT", Didot, "Iowan Old Style", serif;
+  font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+  font-weight: 400;
+}
+
+.recommendationsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+@media (max-width: 720px) {
+  .detail { grid-template-columns: 1fr; }
+  .detailImage { min-height: 32rem; }
+}
+
+@media (max-width: 640px) {
+  .recommendationsGrid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+  }
+}

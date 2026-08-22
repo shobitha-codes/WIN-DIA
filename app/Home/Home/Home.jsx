@@ -489,7 +489,7 @@ function RangeCategories() {
             <div className="products-split-top">
               <div className="products-split-eyebrow">Made for Mindful Snacking</div>
               <h2 className="products-split-title">
-                <em>Gluten-Free</em><br />Range
+                <em>Health & Wellness</em><br />Range
               </h2>
             </div>
             <div className="products-split-bottom">
@@ -497,7 +497,7 @@ function RangeCategories() {
                 Lighter, easy-to-digest options without compromising on taste and crunch.
               </p>
               <a href="/shop?range=gluten-free" className="products-range-btn">
-                Explore Gluten-Free Range <span className="btn-arrow">→</span>
+                Explore Health & Wellness Range <span className="btn-arrow">→</span>
               </a>
             </div>
           </div>

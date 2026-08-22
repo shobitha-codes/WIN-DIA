@@ -1,0 +1,187 @@
+.tile {
+  background: #fffaf4;
+  border: 0.5px solid rgba(90, 52, 26, 0.15);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: box-shadow 200ms ease, transform 200ms ease;
+}
+
+.tile:hover, .tile:focus-within {
+  box-shadow: 0 0.5rem 1.25rem rgba(90, 52, 26, 0.12);
+  transform: translateY(-2px);
+}
+
+.imageWrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  background: #f2e2d2;
+}
+
+.imageLink {
+  position: absolute;
+  inset: 0;
+  display: block;
+  &:focus-visible { outline: 2px solid #5a341a; outline-offset: -2px; }
+}
+
+.image { object-fit: cover; object-position: center; }
+
+.offerBadge {
+  position: absolute;
+  top: 0.6rem;
+  left: 0.6rem;
+  z-index: 2;
+  padding: 0.25rem 0.6rem;
+  color: #5a341a;
+  background: #fff3e9;
+  border: 0.5px solid rgba(90, 52, 26, 0.2);
+  border-radius: 999px;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.wishlistButton {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.6rem;
+  z-index: 2;
+  display: grid;
+  width: 1.9rem;
+  aspect-ratio: 1;
+  padding: 0;
+  color: #5a341a;
+  background: #ffffff;
+  border: 0;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 140ms ease;
+  &:hover, &:focus-visible { transform: scale(1.06); }
+  &:focus-visible { outline: 2px solid #5a341a; outline-offset: 2px; }
+}
+
+.wishlistActive { color: #a63d2d; }
+
+.tileBody { padding: 0.75rem 0.85rem 0.9rem; }
+
+.productType {
+  margin: 0;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #8a5b34;
+}
+
+.productNameLink {
+  display: block;
+  margin: 0.15rem 0 0;
+  color: #5a341a;
+  font-family: "The Seasons", "Bodoni MT", Didot, "Iowan Old Style", serif;
+  font-size: 1.15rem;
+  text-decoration: none;
+  &:hover, &:focus-visible { text-decoration: underline; }
+  &:focus-visible { outline: 2px solid #5a341a; outline-offset: 2px; }
+}
+
+.ratingRow {
+  margin: 0.3rem 0 0;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.78rem;
+}
+
+.reviewCount { color: #8a5b34; }
+
+.price {
+  margin: 0.35rem 0 0.65rem;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.tileOffer, .tileDelivery {
+  margin: 0.15rem 0 0;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #7a4a26;
+}
+
+.tileOffer + .tileDelivery { margin-top: 0.1rem; }
+.tileDelivery + .addToCartButton,
+.tileOffer + .addToCartButton,
+.tileDelivery + .quantityControl,
+.tileOffer + .quantityControl { margin-top: 0.6rem; }
+
+.addToCartButton, .quantityControl {
+  width: 100%;
+  color: #fff3e9;
+  background: #5a341a;
+  border: 1px solid #5a341a;
+  border-radius: 8px;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.addToCartButton {
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: background-color 160ms ease;
+  &:hover, &:focus-visible { background: #402512; }
+  &:focus-visible { outline: 2px solid #5a341a; outline-offset: 2px; }
+}
+
+.quantityControl {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  align-items: center;
+}
+
+.quantityControl button {
+  height: 1.9rem;
+  padding: 0;
+  color: #fff3e9;
+  background: transparent;
+  border: 0;
+  font-size: 1.05rem;
+  cursor: pointer;
+  &:focus-visible { outline: 2px solid #fff3e9; outline-offset: -2px; }
+}
+.quantityControl span { text-align: center; font-size: 0.82rem; }
+
+@media (max-width: 640px) {
+  .section {
+    padding-bottom: 1.5rem;
+  }
+
+  .headingArea {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.4rem;
+    padding: 0 0.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .offerBadge {
+    top: 0.35rem;
+    left: 0.35rem;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.55rem;
+    letter-spacing: 0.01em;
+  }
+
+  .wishlistButton {
+    top: 0.35rem;
+    right: 0.35rem;
+    width: 1.4rem;
+    font-size: 0.75rem;
+  }
+}
