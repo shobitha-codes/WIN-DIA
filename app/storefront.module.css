@@ -366,6 +366,27 @@
   padding: 14px 0;
 }
 
+.logoWrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logoWrap img {
+  display: block;
+}
+
+.logoTrademark {
+  position: absolute;
+  top: 12px;
+  right: 3px;
+
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+}
+
 /* ── MOBILE MENU ── */
 .mobileMenu {
   display: none;

@@ -36,13 +36,17 @@ export default function StoreNav() {
 
         {/* LOGO */}
         <Link href="/" className={styles.brand}>
-          <img src="/images/windia-logo.png" alt="WIN-DIA" />
-          <div className={styles.brandWordmark}>
-            <span className={styles.brandName}>
-              WIN-DIA<sup style={{ fontSize: "20px", verticalAlign: "super" }}>™</sup>
-            </span>
-          </div>
-        </Link>
+  <div className={styles.logoWrap}>
+    <img src="/images/windia-logo.png" alt="WIN-DIA" />
+    <sup className={styles.logoTrademark}>™</sup>
+  </div>
+
+  <div className={styles.brandWordmark}>
+    <span className={styles.brandName}>
+      WIN-DIA
+    </span>
+  </div>
+</Link>
 
         {/* NAV LINKS */}
         <div className={styles.links}>

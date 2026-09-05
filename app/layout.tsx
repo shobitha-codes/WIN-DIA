@@ -4,6 +4,7 @@ import "./globals.css";
 import Providers from "./providers";
 import StoreNav from "@/src/frontend/components/StoreNav";
 import Footer from "@/src/frontend/components/Footer/Footer";
+import MobileBottomNav from "@/src/frontend/components/MobileBottomNav";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default function RootLayout({
           <StoreNav />
           {children}
           <Footer />
+          <MobileBottomNav />
         </Providers>
       </body>
     </html>

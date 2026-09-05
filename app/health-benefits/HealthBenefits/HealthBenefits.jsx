@@ -96,7 +96,7 @@ function HeroSection() {
 const STATS = [
   {
     id: 'gi',
-    target: 44,
+    target: 48,
     decimals: 0,
     suffix: '',
     fill: 0.44,
@@ -319,7 +319,7 @@ function DigestiveWellness() {
 function GlycemicIndex() {
   const [ref, visible] = useInView(0.2);
   const foods = [
-    { name: 'WIN-DIA Khakhra', gi: 44, level: 'LOW',    color: '#2D6A4F' },
+    { name: 'WIN-DIA Khakhra', gi: 48, level: 'LOW',    color: '#2D6A4F' },
     { name: 'Brown Rice',      gi: 68, level: 'MEDIUM',  color: '#D4A373' },
     { name: 'White Bread',     gi: 75, level: 'HIGH',    color: '#E86A4A' },
   ];
@@ -636,7 +636,7 @@ const rows = [
         desc: 'Lower = steadier energy',
         rice:  { icon: 'bad',  text: '~73 — High GI' },
         other: { icon: 'bad',  text: '~65–80 — High GI' },
-        win:   { icon: 'win',  text: '44 — Certified low GI' },
+        win:   { icon: 'win',  text: '48 — Certified low GI' },
       },
       {
         name: 'Energy release',

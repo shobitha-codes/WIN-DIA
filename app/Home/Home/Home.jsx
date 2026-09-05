@@ -98,9 +98,8 @@ const SLIDES = [
   },
   { type: 'flavour', flavour: 'Jeera',    background: jeeraBg.src,   bg: '#6F4A2D', accent: '#f5deb3', textColor: '#fff8f0', tagline: 'Earthy & Warm',     headline: 'Jeera\nFlavour',   sub: 'The classic Indian spice — bold, aromatic and guilt-free.',       badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#d4873a' },
   { type: 'flavour', flavour: 'Garlic',    background: garlicBg.src,  bg: '#E1ACAC', accent: '#f4c89a', textColor: '#fff5f0', tagline: 'Bold & Punchy',      headline: 'Garlic\nFlavour',  sub: 'Intense roasted garlic in every crisp, wholesome bite.',         badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#a03535' },
-  { type: 'flavour', flavour: 'Moringa',  background: moringaBg.src, bg: '#004225', accent: '#b5e5a0', textColor: '#f0fff0', tagline: "Nature's Superfood", headline: 'Moringa\nFlavour', sub: 'Packed with nutrients, light on calories, rich in flavour.',      badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#3d7a34' },
   { type: 'flavour', flavour: 'Onion',    background: onionBg.src,   bg: '#A888B5', accent: '#f0c4f0', textColor: '#fff0ff', tagline: 'Sweet & Savoury',    headline: 'Onion\nFlavour',   sub: 'Caramelised onion warmth baked into every thin crisp.',          badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#8c4f8c' },
-  { type: 'flavour', flavour: 'Methi',    background: methiBg.src,   bg: '#FFA55D', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'Distinctly Desi',    headline: 'Methi\nFlavour',   sub: 'The bittersweet charm of fenugreek in a roasted crisp.',         badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25' },
+  { type: 'flavour', flavour: 'Methi',    background: methiBg.src,   bg: '#FFA55D', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'Distinctly Desi',    headline: 'Methi\nFlavour',   sub: 'The bittersweet charm of fenugreek in a roasted crisp.',         badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25',  comingSoon: true },
   { type: 'flavour', flavour: 'Curry',    background: curryBg.src,   bg: '#468432', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'Distinctly Desi',    headline: 'Curry\nFlavour',   sub: 'Aromatic curry flavour in every crunchy bite.',                  badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25' },
 ]
 
@@ -219,7 +218,7 @@ useEffect(() => {
         </div>
         <div className="stat-divider" />
         <div className="stat">
-          <span className="stat-num">44%</span>
+          <span className="stat-num">48</span>
           <span className="stat-label">Glycaemic Index</span>
         </div>
         <div className="stat-divider" />
@@ -261,6 +260,12 @@ useEffect(() => {
       ))}
     </h1>
 
+    {slide.comingSoon ? (
+  <div className="hero-coming-soon">
+    COMING SOON
+  </div>
+) : (
+  <>
     <div className="hero-badge-pill">
       {slide.badge}
     </div>
@@ -270,6 +275,8 @@ useEffect(() => {
         Shop Now
       </Link>
     </div>
+  </>
+)}
   </div>
 </div>
 )} 
@@ -327,7 +334,7 @@ const WHY_PANELS = [
   {
     label: 'Low GI',
     tagline: 'No sugar spikes.',
-    desc: 'A GI of 44 means no sugar spikes, no crashes. Just steady, sustained energy from the first bite to the last.',
+    desc: 'A GI of 48 means no sugar spikes, no crashes. Just steady, sustained energy from the first bite to the last.',
     bg: bgLowGi.src,
     color: '#14243a',
   },
@@ -644,11 +651,11 @@ function FeaturedProducts() {
 /* ============================================================
    TESTIMONIALS
    ============================================================ */
-const videoReviews = [
+/*const videoReviews = [
   { id: 1, src: '/video/review1.mp4',  name: 'Ananya', location: 'Bengaluru', lift: true },
   { id: 2, src: '/video/review2.mp4',  name: 'Karthik', location: 'Hyderabad', lift: false },
   { id: 3, src: '/video/review3.mp4',  name: 'Sneha', location: 'Pune', lift: true },
-]
+]*/
 
 const reviews = [
   { rating: 5.0, quote: "I bought these for healthier snacking, but they've become a small ritual in our home. Every evening tea now feels incomplete without them. The jeera flavour especially has this warmth that just feels like home.", author: "Priya Mehta", location: "Bengaluru", product: "Garlic Thins" },
@@ -663,7 +670,7 @@ const reviews = [
 ]
 
 /* ---------- Video card ---------- */
-function VideoReviewCard({ review }) {
+/*function VideoReviewCard({ review }) {
   const videoRef = useRef(null)
   const [playing, setPlaying] = useState(false)
 
@@ -718,7 +725,7 @@ function VideoReviewCard({ review }) {
       </div>
     </div>
   )
-}
+}*/
 
 /* ---------- Star rating ---------- */
 function StarRating({ rating }) {
@@ -842,15 +849,17 @@ function Testimonials() {
       <span className="tc-label">Testimonials</span>
       <h2 className="tc-heading">Loved by thousands</h2>
       <p className="tc-sub">Real people · Real results</p>
-
-      {/* ---------- Section 1: video reviews ---------- */}
+    
+      {/* ---------- Section 1: video reviews ---------- 
       <div className="tv-row">
         {videoReviews.map(review => (
           <VideoReviewCard key={review.id} review={review} />
         ))}
       </div>
-
+      
       <div className="tc-divider" />
+      */}
+    
 
       {/* ---------- Section 2: written reviews ---------- */}
       <QuoteSlider />
@@ -865,12 +874,12 @@ function Testimonials() {
    ============================================================ */
 
   const recognitions = [
-  { title: 'Karnataka Startup Recognized', subtitle: 'Startup Karnataka Initiative', description: 'Kalpavristi Coco Foods Pvt. Ltd. is officially recognized under the Karnataka Government\'s Startup initiative. This recognition by the Karnataka Startup Cell provides access to fiscal incentives, funding support, mentorship, and market development resources — validating Win-Dia as an innovative food-tech venture from Karnataka.', image: recognition1.src, bgImage: heroBg2.src , blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Startup Karnataka — Govt. of Karnataka' },
-  { title: 'CFTRI Recognized', subtitle: 'Food Innovation & Excellence', description: 'Kalpavristi Coco Foods Pvt. Ltd. has been recognized by the Central Food Technological Research Institute (CFTRI), one of India’s leading food research institutions. This recognition reflects our commitment to innovation, quality, and the development of better, value-driven food products.', image: recognition2.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'Central Food Technological Research Institute (CFTRI)' },
-  { title: 'RISE Conclave 2026', subtitle: 'Research, Industry & Startup Recognition', description: 'Kalpavristi Coco Foods Pvt. Ltd. participated in RISE Conclave 2026, the Research, Industry, Startup and Entrepreneurship Conclave organized in Bengaluru. The event brought together research, industry, startups, and entrepreneurship, providing an opportunity to showcase our food innovation journey and connect with India’s broader innovation ecosystem.', image: recognition3.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'CSIR — RISE Conclave 2026' },
-  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'Kalpavristi Coco Foods Pvt. Ltd. successfully participated in Cohort 1 of APEDA’s BHARATI Export Enablement Acceleration Programme, gaining valuable insights into export opportunities and global market readiness.', image: recognition4.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
-  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'As part of the APEDA BHARATI programme, Kalpavristi Coco Foods Pvt. Ltd. engaged with experts, industry leaders, and fellow innovators to understand the evolving agri-food export ecosystem and opportunities for Indian food brands.', image: recognition5.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
-  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'Successfully completing the programme marked an important step in our journey towards taking innovative Indian food products to international markets. The experience strengthened our focus on export readiness and our vision of bringing products from Bharat to the world.', image: recognition6.src, bgImage: heroBg2.src, blogUrl: 'https://www.instagram.com/kalpavristi_coco_fab', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
+  { title: 'Karnataka Startup Recognized', subtitle: 'Startup Karnataka Initiative', description: 'Kalpavristi Coco Foods Pvt. Ltd. is officially recognized under the Karnataka Government\'s Startup initiative. This recognition by the Karnataka Startup Cell provides access to fiscal incentives, funding support, mentorship, and market development resources — validating Win-Dia as an innovative food-tech venture from Karnataka.', image: recognition1.src, bgImage: heroBg2.src , blogUrl: 'https://www.linkedin.com/in/g-tejaswini-281a7b340/', organization: 'Startup Karnataka — Govt. of Karnataka' },
+  { title: 'CFTRI Recognized', subtitle: 'Food Innovation & Excellence', description: 'Kalpavristi Coco Foods Pvt. Ltd. has been recognized by the Central Food Technological Research Institute (CFTRI), one of India’s leading food research institutions. This recognition reflects our commitment to innovation, quality, and the development of better, value-driven food products.', image: recognition2.src, bgImage: heroBg2.src, blogUrl: 'https://www.linkedin.com/in/g-tejaswini-281a7b340/', organization: 'Central Food Technological Research Institute (CFTRI)' },
+  { title: 'RISE Conclave 2026', subtitle: 'Research, Industry & Startup Recognition', description: 'Kalpavristi Coco Foods Pvt. Ltd. participated in RISE Conclave 2026, the Research, Industry, Startup and Entrepreneurship Conclave organized in Bengaluru. The event brought together research, industry, startups, and entrepreneurship, providing an opportunity to showcase our food innovation journey and connect with India’s broader innovation ecosystem.', image: recognition3.src, bgImage: heroBg2.src, blogUrl: 'https://www.linkedin.com/in/g-tejaswini-281a7b340/', organization: 'CSIR — RISE Conclave 2026' },
+  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'Kalpavristi Coco Foods Pvt. Ltd. successfully participated in Cohort 1 of APEDA’s BHARATI Export Enablement Acceleration Programme, gaining valuable insights into export opportunities and global market readiness.', image: recognition4.src, bgImage: heroBg2.src, blogUrl: 'https://www.linkedin.com/in/g-tejaswini-281a7b340/', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
+  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'As part of the APEDA BHARATI programme, Kalpavristi Coco Foods Pvt. Ltd. engaged with experts, industry leaders, and fellow innovators to understand the evolving agri-food export ecosystem and opportunities for Indian food brands.', image: recognition5.src, bgImage: heroBg2.src, blogUrl: 'https://www.linkedin.com/in/g-tejaswini-281a7b340/', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
+  { title: 'APEDA BHARATI Programme', subtitle: 'Export Enablement & Global Market Readiness', description: 'Successfully completing the programme marked an important step in our journey towards taking innovative Indian food products to international markets. The experience strengthened our focus on export readiness and our vision of bringing products from Bharat to the world.', image: recognition6.src, bgImage: heroBg2.src, blogUrl: 'https://www.linkedin.com/in/g-tejaswini-281a7b340/', organization: 'APEDA — BHARATI Export Enablement Acceleration Programme' },
 ];
 
 
@@ -1303,7 +1312,7 @@ function CommunityShowcase(){
             Every bite celebrates the goodness of coconut flour and the warmth of family traditions. Join our community in rediscovering snacking that nourishes both body and soul.
           </motion.p>
           <motion.div className="com-stats" initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.35}}>
-            <div className="com-stat"><span className="com-stat-value">44 GI</span><span className="com-stat-label">Low Glycemic</span></div>
+            <div className="com-stat"><span className="com-stat-value">48 GI</span><span className="com-stat-label">Low Glycemic</span></div>
             <div className="com-stat"><span className="com-stat-value">4.85g</span><span className="com-stat-label">Fiber Rich</span></div>
           </motion.div>
         </motion.div>

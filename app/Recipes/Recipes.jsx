@@ -670,6 +670,60 @@ function HeroSection() {
   );
 }
 
+/*-----video section-----*/
+
+function RecipeVideoSection() {
+  return (
+    <section className="win-rc-video-section">
+      <div className="win-rc-video-container">
+
+        <div className="win-rc-video-header">
+          
+
+          <h2 className="win-rc-h2">
+            Watch. Make. <em>Enjoy.</em>
+          </h2>
+
+          
+        </div>
+
+        <div className="win-rc-video-grid">
+
+          {/* Recipe Video 1 */}
+          <div className="win-rc-video-card">
+            <video
+              className="win-rc-recipe-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+            >
+              <source src="/video/recipe1.mp4" type="video/mp4" />
+            </video>
+          </div>
+
+          {/* Recipe Video 2 */}
+          <div className="win-rc-video-card">
+            <video
+              className="win-rc-recipe-video"
+              autoPlay
+              muted
+              loop
+              playsInline
+              controls
+            >
+              <source src="/video/recipe2.mp4" type="video/mp4" />
+            </video>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+  );
+}
+
 // - Categories -----------------
 
 // - Quick & Easy ----------------─
@@ -853,6 +907,8 @@ function DipsSection() {
 const Recipes = () => (
   <div className="win-rc-page">
     <HeroSection />
+
+    <RecipeVideoSection />
     <QuickSection />
     <WorthSection />
     <MealPrepTicker />

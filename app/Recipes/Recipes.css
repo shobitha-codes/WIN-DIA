@@ -85,6 +85,107 @@
 .win-rc-hero-h1 em { font-style: italic; }
 .win-rc-hero-desc { font-size: 17px; color: rgba(255,255,255,0.9); line-height: 1.7; max-width: 560px; margin: 0 auto; text-shadow: 0 2px 4px rgba(0,0,0,0.3); }
 
+/* =========================================
+   RECIPE VIDEO SECTION
+========================================= */
+
+.win-rc-video-section {
+  width: 100%;
+  padding: 80px 40px;
+  background:  #F8F3EA;
+  box-sizing: border-box;
+}
+
+.win-rc-video-container {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Heading */
+
+.win-rc-video-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto 45px;
+}
+
+.win-rc-video-header .win-rc-overline {
+  margin-bottom: 10px;
+}
+
+.win-rc-video-header .win-rc-h2 {
+  margin: 0;
+}
+
+.win-rc-video-header .win-rc-section-sub {
+  margin-top: 14px;
+}
+
+/* Video grid */
+
+.win-rc-video-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 30px;
+}
+
+/* Individual video */
+
+.win-rc-video-card {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #1a1a1a;
+  position: relative;
+}
+
+.win-rc-recipe-video {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+/* =========================================
+   TABLET
+========================================= */
+
+@media (max-width: 900px) {
+  .win-rc-video-section {
+    padding: 70px 25px;
+  }
+
+  .win-rc-video-grid {
+    gap: 22px;
+  }
+}
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 650px) {
+  .win-rc-video-section {
+    padding: 55px 18px;
+  }
+
+  .win-rc-video-header {
+    margin-bottom: 30px;
+  }
+
+  .win-rc-video-grid {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .win-rc-video-card {
+    border-radius: 16px;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════════
    CATEGORIES
    ═══════════════════════════════════════════════════════════════════ */
