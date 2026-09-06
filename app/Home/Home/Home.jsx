@@ -521,14 +521,14 @@ function RangeCategories() {
    ============================================================ */
 
 const FEATURED_PRODUCTS = [
-  {
+  /*{
     base: methiBase.src,
     tilt: methiTilt.src,
     opening: methiOpening.src,
     open: methiOpen.src,
     name: 'Methi Thins',
     price: '₹220',
-  },
+  },*/
   {
     base: jeeraBase.src,
     tilt: jeeraTilt.src,
