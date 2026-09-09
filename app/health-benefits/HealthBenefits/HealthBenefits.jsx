@@ -303,7 +303,7 @@ function DigestiveWellness() {
         <div className="win-hb-digestive-right">
           <div className="win-hb-big-quote">"</div>
           <blockquote className="win-hb-quote-text">
-            With just one meal of WIN-DIA Coconut Flour Thins, many experience a noticeable improvement
+            With just one meal of WIN-DIA fiber rich Thins, many experience a noticeable improvement
             in bowel movement — leaving you feeling light, relieved, and ready to enjoy your entire day.
           </blockquote>
           <div className="win-hb-quote-source">WIN-DIA Digestive Promise</div>
@@ -809,7 +809,11 @@ function ComparisonTable() {
           <div className="win-ct-prod-card win-ct-prod-card--win">
             <span className="win-ct-prod-icon">🌿</span>
             <span className="win-ct-prod-eye win-ct-prod-eye--win">Our product</span>
+
             <span className="win-ct-prod-name win-ct-prod-name--win">WIN-DIA Thins</span>
+
+            <span className="win-ct-prod-name win-ct-prod-name--win">Win-dia fiber rich Thins</span>
+
             <span className="win-ct-prod-badge">✦ Best choice</span>
           </div>
           <div className="win-ct-prod-card">
