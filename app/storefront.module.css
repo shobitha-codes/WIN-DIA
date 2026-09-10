@@ -500,3 +500,31 @@
     grid-template-columns: 1fr;
   }
 }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logoWrap img {
+  display: block;
+  height: 50px;
+  width: auto;
+}
+
+.brandWordmark {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brandName {
+  font-weight: 700;
+}
+
+.brandTagline {
+  font-size: 14px;
+  font-style: italic;
+  white-space: nowrap;
+}
