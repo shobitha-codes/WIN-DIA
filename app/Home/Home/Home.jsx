@@ -8,10 +8,10 @@ import Image from 'next/image';
 import BannerStrip from "@/src/frontend/components/BannerStrip/BannerStrip";
 import WhatsAppButton from "@/src/frontend/components/WhatsAppButton/WhatsAppButton";
 
-import jeeraBg  from './jeera-bg.jpg'
-import garlicBg  from './garlic-bg.jpg'
-import curryBg  from './curry-bg.jpg'
-import onionBg   from './onion-bg.jpg'
+import jeeraBg  from './jeera-bg.png'
+import garlicBg  from './garlic-bg.png'
+import curryBg  from './curry-bg.png'
+import onionBg   from './onion-bg.png'
 import all4 from './all-4.jpg'
 
 // ── Why Us — wood background
