@@ -1,0 +1,67 @@
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { getEnv } from './env.config';
+
+let browserClient: SupabaseClient | null = null;
+let adminClient: SupabaseClient | null = null;
+
+/**
+ * Creates or gets singleton Supabase browser client (Anon key)
+ */
+export function getBrowserClient(): SupabaseClient {
+  if (browserClient) {
+    return browserClient;
+  }
+
+  const env = getEnv();
+  browserClient = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY);
+  return browserClient;
+}
+
+/**
+ * Creates a request-scoped server Supabase client using the request's authorization header
+ */
+export function getServerClient(authHeader?: string): SupabaseClient {
+  const env = getEnv();
+  const globalHeaders: Record<string, string> = {};
+
+  if (authHeader) {
+    globalHeaders.Authorization = authHeader;
+  }
+
+  return createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.NEXT_PUBLIC_SUPABASE_ANON_KEY, {
+    global: {
+      headers: globalHeaders,
+    },
+    auth: {
+      persistSession: false,
+    },
+  });
+}
+
+/**
+ * Creates or gets singleton elevated Admin Supabase client using the Service Role Key.
+ * Use ONLY for explicit admin or system tasks requiring RLS bypass (webhooks, migrations, admin tasks).
+ */
+export function getAdminClient(): SupabaseClient {
+  if (adminClient) {
+    return adminClient;
+  }
+
+  const env = getEnv();
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!serviceKey) {
+    console.error('❌ SUPABASE_SERVICE_ROLE_KEY is missing from environment variables');
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY is required to initialize Admin client');
+  }
+
+  adminClient = createClient(url, serviceKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+    },
+  });
+
+  return adminClient;
+}

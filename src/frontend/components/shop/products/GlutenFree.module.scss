@@ -1,0 +1,57 @@
+.section {
+  background: #fff3e9;
+  color: #5a341a;
+  padding-bottom: 3rem;
+}
+
+.headingArea {
+  padding: 5rem clamp(1.25rem, 4vw, 4.5rem) 2rem;
+}
+
+.heading {
+  margin: 0;
+  font-family: "The Seasons", "Bodoni MT", Didot, "Iowan Old Style", serif;
+  font-size: clamp(2.5rem, 4.5vw, 4.25rem);
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: clamp(1rem, 1.8vw, 1.5rem);
+  margin: 0;
+  padding: 0 clamp(1.25rem, 4vw, 4.5rem);
+  list-style: none;
+
+  &:has(> :only-child) {
+    grid-template-columns: minmax(260px, 400px);
+    justify-content: start;
+  }
+}
+
+@media (max-width: 640px) {
+  .section {
+    padding-bottom: 1.5rem;
+  }
+
+  .headingArea {
+    padding: 1.5rem 1rem 1rem;
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    padding: 0 0.75rem;
+  }
+
+  /* When there is only one product,
+     keep it the same width as one normal product card */
+  .grid:has(> :only-child) {
+    grid-template-columns: calc((100vw - 1.5rem) / 2);
+    max-width: 100%;
+    justify-content: start;
+  }
+}

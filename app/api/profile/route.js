@@ -1,0 +1,93 @@
+import { NextResponse } from 'next/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
+
+/* === Shared: get authed user + admin client === */
+async function getAuthedContext() {
+  const supabase = await createSupabaseServerClient();
+  const supabaseAdmin = createSupabaseAdminClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  return { supabaseAdmin, user };
+}
+
+/* === GET current user's profile === */
+export async function GET() {
+  try {
+    const { supabaseAdmin, user } = await getAuthedContext();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+    }
+
+    const { data: profile, error } = await supabaseAdmin
+      .from('profiles')
+      .select('id, full_name, email, phone, avatar_url')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (error) {
+      return NextResponse.json({ success: false, error: error.message }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, profile });
+  } catch (err) {
+    console.error('Profile GET error:', err);
+    return NextResponse.json(
+      { error: err.message || 'Something went wrong.' },
+      { status: 500 }
+    );
+  }
+}
+
+/* === PUT: update full_name / phone (email is not editable here) === */
+export async function PUT(request) {
+  try {
+    const { supabaseAdmin, user } = await getAuthedContext();
+
+    if (!user) {
+      return NextResponse.json({ error: 'Not authenticated.' }, { status: 401 });
+    }
+
+    const { full_name, phone } = await request.json();
+
+    /* === Validate phone format (10-digit Indian mobile) === */
+    const normalizedPhone = phone ? phone.replace(/\D/g, '').replace(/^91(?=\d{10}$)/, '') : phone;
+    if (normalizedPhone && !/^[6-9]\d{9}$/.test(normalizedPhone)) {
+      return NextResponse.json({ success: false, error: 'Enter a valid 10-digit mobile number.' }, { status: 400 });
+    }
+
+    /* === Reject if phone is taken by someone else === */
+    if (normalizedPhone) {
+      const { data: existing } = await supabaseAdmin
+        .from('profiles')
+        .select('id')
+        .eq('phone', normalizedPhone)
+        .neq('id', user.id)
+        .maybeSingle();
+
+      if (existing) {
+        return NextResponse.json({ success: false, error: 'This phone number is already in use.' }, { status: 409 });
+      }
+    }
+
+    const { data: updated, error } = await supabaseAdmin
+      .from('profiles')
+      .update({ full_name, phone: normalizedPhone, updated_at: new Date().toISOString() })
+      .eq('id', user.id)
+      .select()
+      .maybeSingle();
+
+    if (error) {
+      console.error('Profile update error:', error);
+      return NextResponse.json({ success: false, error: 'Could not save changes. Please try again.' }, { status: 400 });
+    }
+
+    return NextResponse.json({ success: true, profile: updated });
+  } catch (err) {
+    console.error('Profile PUT error:', err);
+    return NextResponse.json(
+      { error: err.message || 'Something went wrong.' },
+      { status: 500 }
+    );
+  }
+}

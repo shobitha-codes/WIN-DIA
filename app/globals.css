@@ -1,0 +1,71 @@
+/* ============================================================
+   GLOBAL STYLES — inlined so no separate CSS files are needed
+   ============================================================ */
+
+@import url('../src/frontend/variables.css');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Jost:wght@300;400;500&display=swap');
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+}
+
+main {
+  margin: 0;
+  padding: 0;
+}
+
+  /* ── SHARED TOKENS ── */
+  :root {
+    /* Gold / cocoa palette (Header) */
+    --gold:           #c9a84c;
+    --gold-light:     #e8c97a;
+    --gold-dim:       rgba(201,168,76,0.35);
+    --cocoa:          #3b1f0a;
+    --cocoa-dark:     #2a1506;
+    --cocoa-pale:     #7a5535;
+    --cocoa-mid:      #5c3a1e;
+    --cocoa-cream:    #f0dfc8;
+    --green-palm:     #2d7a3a;
+    --ivory-base:     #faf6ef;
+    --ivory-mid:      #f4ede0;
+    --ivory-shadow:   rgba(59,31,10,0.08);
+    --text-primary:   #2e1a0a;
+    --text-secondary: #7a5535;
+
+    /* Footer palette */
+    --f-moss:     #3b5140;
+    --f-sage:     #6b7f5e;
+    --f-sage-lt:  #a5b89a;
+    --f-clay:     #c4855a;
+    --f-cream:    #f4efe6;
+    --f-linen:    #e8e0d0;
+    --f-text:     #f0ebe0;
+    --f-text-dim: rgba(240,235,224,0.55);
+    --f-rule:     rgba(165,184,154,0.28);
+    --f-gold:     #c9a96e;
+
+     --cream:      #faf6ef;
+  --cream-warm: #f4ede0;
+  --white:      #ffffff;
+  --coco:       #3b1f0a;
+  --coco-mid:   #58381e;
+  --coco-light: #7a5535;
+  --coco-faint: #c4a882;
+  --border:     #e8d9c0;
+  --error:      #c4451e;
+  --shadow-sm:  0 4px 14px rgba(59,31,10,0.08);
+  --shadow-md:  0 8px 26px rgba(59,31,10,0.12);
+  --shadow-lg:  0 18px 44px rgba(59,31,10,0.18);
+  }

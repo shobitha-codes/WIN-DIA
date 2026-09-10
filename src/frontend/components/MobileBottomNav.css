@@ -1,0 +1,191 @@
+/* ============================================================
+   MOBILE BOTTOM NAVIGATION
+   ============================================================ */
+
+.mobile-bottom-nav {
+  display: none;
+}
+
+
+/* ============================================================
+   MOBILE ONLY
+   ============================================================ */
+
+@media (max-width: 768px) {
+
+  .mobile-bottom-nav {
+    display: block;
+
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+
+    width: 100%;
+
+    z-index: 9999;
+
+    background: #ffffff;
+
+    border-top: 1px solid rgba(80, 48, 25, 0.12);
+
+    box-shadow:
+      0 -4px 18px rgba(0, 0, 0, 0.08);
+
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+
+  /* ----------------------------------------------------------
+     INNER
+     ---------------------------------------------------------- */
+
+  .mobile-bottom-nav__inner {
+    width: 100%;
+
+    min-height: 68px;
+
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+  }
+
+
+  /* ----------------------------------------------------------
+     EACH ITEM
+     ---------------------------------------------------------- */
+
+  .mobile-bottom-nav__item {
+    flex: 1;
+
+    min-width: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    gap: 4px;
+
+    text-decoration: none;
+
+    color: #77716d;
+
+    padding: 7px 2px 6px;
+
+    -webkit-tap-highlight-color: transparent;
+
+    transition:
+      color 0.2s ease,
+      transform 0.2s ease;
+  }
+
+
+  /* ----------------------------------------------------------
+     ICON
+     ---------------------------------------------------------- */
+
+  .mobile-bottom-nav__icon {
+    width: 25px;
+    height: 25px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    transition:
+      transform 0.2s ease,
+      color 0.2s ease;
+  }
+
+  .mobile-bottom-nav__icon svg {
+    width: 23px;
+    height: 23px;
+
+    stroke-width: 1.7;
+  }
+
+
+  /* ----------------------------------------------------------
+     LABEL
+     ---------------------------------------------------------- */
+
+  .mobile-bottom-nav__label {
+    font-size: 11px;
+
+    font-weight: 500;
+
+    line-height: 1.1;
+
+    white-space: nowrap;
+
+    transition:
+      color 0.2s ease,
+      font-weight 0.2s ease;
+  }
+
+
+  /* ----------------------------------------------------------
+     ACTIVE ITEM
+     ---------------------------------------------------------- */
+
+  .mobile-bottom-nav__item--active {
+    color: #6b3518;
+  }
+
+  .mobile-bottom-nav__item--active
+  .mobile-bottom-nav__icon {
+    transform: translateY(-1px);
+  }
+
+  .mobile-bottom-nav__item--active
+  .mobile-bottom-nav__icon svg {
+    stroke-width: 2.2;
+  }
+
+  .mobile-bottom-nav__item--active
+  .mobile-bottom-nav__label {
+    font-weight: 700;
+  }
+
+
+  /* ----------------------------------------------------------
+     TOUCH FEEDBACK
+     ---------------------------------------------------------- */
+
+  .mobile-bottom-nav__item:active {
+    transform: scale(0.94);
+  }
+}
+
+
+/* ============================================================
+   SMALL MOBILE SCREENS
+   ============================================================ */
+
+@media (max-width: 380px) {
+
+  .mobile-bottom-nav__inner {
+    min-height: 64px;
+  }
+
+  .mobile-bottom-nav__item {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    gap: 3px;
+  }
+
+  .mobile-bottom-nav__icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .mobile-bottom-nav__icon svg {
+    width: 21px;
+    height: 21px;
+  }
+
+  .mobile-bottom-nav__label {
+    font-size: 10px;
+  }
+}

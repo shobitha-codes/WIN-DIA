@@ -1,0 +1,82 @@
+@import '../../variables.css';
+
+.bannerStripRoot {
+  width: 100%;
+  height: 48px;
+  margin: 0;
+  padding: 0;
+  background: #5a341a;
+  color: #fff3e9;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.bannerStripInner {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+/* Moving track */
+.bannerStripTrack {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/* Actual moving content */
+.bannerStripContent {
+  display: inline-flex;
+  align-items: center;
+  gap: 24px;
+
+  white-space: nowrap;
+
+  font-family: "Barlow Condensed", Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+
+  animation: bannerScroll 18s linear infinite;
+}
+
+/* Make sure links look like normal banner text */
+.bannerStripContent a {
+  color: #fff3e9;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+/* Right → left */
+@keyframes bannerScroll {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+/* Pause when mouse is over banner */
+.bannerStripRoot:hover .bannerStripContent {
+  animation-play-state: paused;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .bannerStripRoot {
+    height: 42px;
+  }
+
+  .bannerStripContent {
+    gap: 14px;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+    animation-duration: 14s;
+  }
+}
