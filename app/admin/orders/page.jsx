@@ -15,6 +15,18 @@ const STATUSES = [
   "cancelled",
 ];
 
+// Date filter options for sales reports
+const DATE_FILTERS = [
+  { value: "all", label: "All Time" },
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yesterday" },
+  { value: "last7days", label: "Last 7 Days" },
+  { value: "thisweek", label: "This Week" },
+  { value: "lastweek", label: "Last Week" },
+  { value: "thismonth", label: "This Month" },
+  { value: "lastmonth", label: "Last Month" },
+];
+
 function formatStatusLabel(status) {
   return (status || "placed").replace(/_/g, " ");
 }
@@ -352,7 +364,7 @@ function generateShippingLabel(order) {
   <div class="footer">
     🌐 www.windiafoods.com<br>
     📞 Customer Support: +91 96861 53413<br>
-    📷 @windia.cocofoods
+    📷 @Kalpavristi_Coco_FAB
   </div>
 
   <!-- Packed Message -->
@@ -405,21 +417,6 @@ function StatusBadge({ status }) {
   );
 }
 
-function StatusFilter({ filter, setFilter }) {
-  return (
-    <div className={styles.toolbar}>
-      <select className={styles.select} style={{ maxWidth: 240 }} value={filter} onChange={(e) => setFilter(e.target.value)}>
-        <option value="">All statuses</option>
-        {STATUSES.map((status) => (
-          <option key={status} value={status}>
-            {formatStatusLabel(status)}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
-}
-
 function OrderRow({ order, authFetch }) {
   const handleGenerateLabel = async () => {
     try {
@@ -443,9 +440,8 @@ function OrderRow({ order, authFetch }) {
     <tr>
       <td>
         <strong>{order.order_number || order.id}</strong>
-        <br />
-        <span className={styles.muted}>{formatDate(order.created_at)}</span>
       </td>
+      <td>{formatDate(order.created_at)}</td>
       <td>{formatCurrency(order.total_price)}</td>
       <td>
         <span className={styles.status}>{order.payment_status || "pending"}</span>
@@ -466,19 +462,87 @@ function OrderRow({ order, authFetch }) {
   );
 }
 
-function OrdersTable({ orders, loading, authFetch }) {
+function OrdersTable({ orders, loading, authFetch, columnFilters, setColumnFilters }) {
   if (loading) return <div className={styles.empty}>Loading orders...</div>;
+
+  // Get unique values for dropdown filters
+  const uniquePaymentStatuses = [...new Set(orders.map(o => o.payment_status || "pending"))];
+  const uniqueOrderStatuses = [...new Set(orders.map(o => o.order_status || "placed"))];
 
   return (
     <div className={styles.tableWrap}>
       <table className={styles.table}>
         <thead>
           <tr>
-            <th>Order</th>
+            <th>Order #</th>
+            <th>Date</th>
             <th>Total</th>
             <th>Payment</th>
             <th>Status</th>
             <th>Label</th>
+          </tr>
+          <tr>
+            <th>
+              <input
+                type="text"
+                placeholder="Search..."
+                className={styles.filterInput}
+                value={columnFilters.orderNumber || ""}
+                onChange={(e) => setColumnFilters({ ...columnFilters, orderNumber: e.target.value })}
+              />
+            </th>
+            <th>
+              <select
+                className={styles.filterInput}
+                value={columnFilters.dateRange || ""}
+                onChange={(e) => setColumnFilters({ ...columnFilters, dateRange: e.target.value })}
+              >
+                <option value="">All Time</option>
+                {DATE_FILTERS.slice(1).map((df) => (
+                  <option key={df.value} value={df.value}>
+                    {df.label}
+                  </option>
+                ))}
+              </select>
+            </th>
+            <th>
+              <input
+                type="text"
+                placeholder="Amount..."
+                className={styles.filterInput}
+                value={columnFilters.total || ""}
+                onChange={(e) => setColumnFilters({ ...columnFilters, total: e.target.value })}
+              />
+            </th>
+            <th>
+              <select
+                className={styles.filterInput}
+                value={columnFilters.payment || ""}
+                onChange={(e) => setColumnFilters({ ...columnFilters, payment: e.target.value })}
+              >
+                <option value="">All</option>
+                {uniquePaymentStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </th>
+            <th>
+              <select
+                className={styles.filterInput}
+                value={columnFilters.status || ""}
+                onChange={(e) => setColumnFilters({ ...columnFilters, status: e.target.value })}
+              >
+                <option value="">All</option>
+                {STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {formatStatusLabel(status)}
+                  </option>
+                ))}
+              </select>
+            </th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -487,7 +551,7 @@ function OrdersTable({ orders, loading, authFetch }) {
           ))}
           {!orders.length && (
             <tr>
-              <td colSpan="5">No orders found.</td>
+              <td colSpan="6">No orders found.</td>
             </tr>
           )}
         </tbody>
@@ -558,6 +622,88 @@ function exportToExcel(orders) {
 // ─── Transaction Details Table (view in browser) ────────────────────────────
 
 function TransactionDetailsTable({ orders, onClose }) {
+  const [columnFilters, setColumnFilters] = useState({
+    orderNumber: "",
+    dateRange: "",
+    total: "",
+    payment: "",
+    status: "",
+  });
+  const [filteredOrders, setFilteredOrders] = useState(orders);
+
+  // Get unique values for dropdown filters
+  const uniquePaymentStatuses = [...new Set(orders.map(o => o.payment_status || "pending"))];
+
+  // Apply filters
+  useEffect(() => {
+    let filtered = [...orders];
+
+    if (columnFilters.orderNumber) {
+      filtered = filtered.filter(order =>
+        (order.order_number || order.id).toLowerCase().includes(columnFilters.orderNumber.toLowerCase())
+      );
+    }
+    if (columnFilters.total) {
+      filtered = filtered.filter(order =>
+        formatCurrency(order.total_price).includes(columnFilters.total)
+      );
+    }
+    if (columnFilters.payment) {
+      filtered = filtered.filter(order =>
+        (order.payment_status || "pending") === columnFilters.payment
+      );
+    }
+    if (columnFilters.status) {
+      filtered = filtered.filter(order =>
+        (order.order_status || "placed") === columnFilters.status
+      );
+    }
+
+    // Date range filter
+    if (columnFilters.dateRange) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.created_at);
+        
+        switch (columnFilters.dateRange) {
+          case "today":
+            return orderDate >= today;
+          case "yesterday":
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return orderDate >= yesterday && orderDate < today;
+          case "last7days":
+            const last7 = new Date(today);
+            last7.setDate(last7.getDate() - 7);
+            return orderDate >= last7;
+          case "thisweek":
+            const thisWeekStart = new Date(today);
+            thisWeekStart.setDate(today.getDate() - today.getDay());
+            return orderDate >= thisWeekStart;
+          case "lastweek":
+            const lastWeekEnd = new Date(today);
+            lastWeekEnd.setDate(today.getDate() - today.getDay() - 1);
+            const lastWeekStart = new Date(lastWeekEnd);
+            lastWeekStart.setDate(lastWeekEnd.getDate() - 6);
+            return orderDate >= lastWeekStart && orderDate <= lastWeekEnd;
+          case "thismonth":
+            const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            return orderDate >= thisMonthStart;
+          case "lastmonth":
+            const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+            return orderDate >= lastMonthStart && orderDate <= lastMonthEnd;
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredOrders(filtered);
+  }, [orders, columnFilters]);
+
   if (!orders.length) {
     return (
       <div className={styles.modal}>
@@ -574,7 +720,7 @@ function TransactionDetailsTable({ orders, onClose }) {
     <div className={styles.modal} onClick={onClose}>
       <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
         <div className={styles.modalHeader}>
-          <h2>Transaction Details ({orders.length} orders)</h2>
+          <h2>Transaction Details ({filteredOrders.length} orders)</h2>
           <button className={styles.closeBtn} onClick={onClose}>✕</button>
         </div>
         <div className={styles.tableWrap} style={{ maxHeight: "70vh", overflow: "auto" }}>
@@ -590,9 +736,74 @@ function TransactionDetailsTable({ orders, onClose }) {
                 <th>Shipping</th>
                 <th>Phone</th>
               </tr>
+              <tr>
+                <th>
+                  <input
+                    type="text"
+                    placeholder="Search..."
+                    className={styles.filterInput}
+                    value={columnFilters.orderNumber || ""}
+                    onChange={(e) => setColumnFilters({ ...columnFilters, orderNumber: e.target.value })}
+                  />
+                </th>
+                <th>
+                  <select
+                    className={styles.filterInput}
+                    value={columnFilters.dateRange || ""}
+                    onChange={(e) => setColumnFilters({ ...columnFilters, dateRange: e.target.value })}
+                  >
+                    <option value="">All Time</option>
+                    {DATE_FILTERS.slice(1).map((df) => (
+                      <option key={df.value} value={df.value}>
+                        {df.label}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+                <th></th>
+                <th>
+                  <input
+                    type="text"
+                    placeholder="Amount..."
+                    className={styles.filterInput}
+                    value={columnFilters.total || ""}
+                    onChange={(e) => setColumnFilters({ ...columnFilters, total: e.target.value })}
+                  />
+                </th>
+                <th>
+                  <select
+                    className={styles.filterInput}
+                    value={columnFilters.payment || ""}
+                    onChange={(e) => setColumnFilters({ ...columnFilters, payment: e.target.value })}
+                  >
+                    <option value="">All</option>
+                    {uniquePaymentStatuses.map((status) => (
+                      <option key={status} value={status}>
+                        {status}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+                <th>
+                  <select
+                    className={styles.filterInput}
+                    value={columnFilters.status || ""}
+                    onChange={(e) => setColumnFilters({ ...columnFilters, status: e.target.value })}
+                  >
+                    <option value="">All</option>
+                    {STATUSES.map((status) => (
+                      <option key={status} value={status}>
+                        {formatStatusLabel(status)}
+                      </option>
+                    ))}
+                  </select>
+                </th>
+                <th></th>
+                <th></th>
+              </tr>
             </thead>
             <tbody>
-              {orders.map((order) => {
+              {filteredOrders.map((order) => {
                 const addr = order.shipping_address || {};
                 const shippingLine = [addr.address_line1, addr.city, addr.state, addr.pincode]
                   .filter(Boolean)
@@ -619,7 +830,7 @@ function TransactionDetailsTable({ orders, onClose }) {
           </table>
         </div>
         <div className={styles.modalFooter}>
-          <button className={styles.button} onClick={() => exportToExcel(orders)}>
+          <button className={styles.button} onClick={() => exportToExcel(filteredOrders)}>
             📥 Download Excel
           </button>
           <button className={`${styles.button} ${styles.buttonSecondary}`} onClick={onClose}>
@@ -636,13 +847,20 @@ function TransactionDetailsTable({ orders, onClose }) {
 export default function AdminOrdersPage() {
   const { authFetch } = useAuth();
   const [orders, setOrders] = useState([]);
-  const [filter, setFilter] = useState("");
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [columnFilters, setColumnFilters] = useState({
+    orderNumber: "",
+    dateRange: "",
+    total: "",
+    payment: "",
+    status: "",
+  });
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
 
   const load = useCallback(() => {
     setLoading(true);
-    authFetch(`/api/admin/orders${filter ? `?status=${filter}` : ""}`)
+    authFetch(`/api/admin/orders`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success) {
@@ -657,46 +875,118 @@ export default function AdminOrdersPage() {
         toast.error("Failed to load orders");
       })
       .finally(() => setLoading(false));
-  }, [filter, authFetch]);
+  }, [authFetch]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  // Apply column filters
+  useEffect(() => {
+    let filtered = [...orders];
+
+    // Apply column filters
+    if (columnFilters.orderNumber) {
+      filtered = filtered.filter(order =>
+        (order.order_number || order.id).toLowerCase().includes(columnFilters.orderNumber.toLowerCase())
+      );
+    }
+    if (columnFilters.total) {
+      filtered = filtered.filter(order =>
+        formatCurrency(order.total_price).includes(columnFilters.total)
+      );
+    }
+    if (columnFilters.payment) {
+      filtered = filtered.filter(order =>
+        (order.payment_status || "pending") === columnFilters.payment
+      );
+    }
+    if (columnFilters.status) {
+      filtered = filtered.filter(order =>
+        (order.order_status || "placed") === columnFilters.status
+      );
+    }
+
+    // Apply date range filter
+    if (columnFilters.dateRange) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      filtered = filtered.filter(order => {
+        const orderDate = new Date(order.created_at);
+        
+        switch (columnFilters.dateRange) {
+          case "today":
+            return orderDate >= today;
+          case "yesterday":
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            return orderDate >= yesterday && orderDate < today;
+          case "last7days":
+            const last7 = new Date(today);
+            last7.setDate(last7.getDate() - 7);
+            return orderDate >= last7;
+          case "thisweek":
+            const thisWeekStart = new Date(today);
+            thisWeekStart.setDate(today.getDate() - today.getDay());
+            return orderDate >= thisWeekStart;
+          case "lastweek":
+            const lastWeekEnd = new Date(today);
+            lastWeekEnd.setDate(today.getDate() - today.getDay() - 1);
+            const lastWeekStart = new Date(lastWeekEnd);
+            lastWeekStart.setDate(lastWeekEnd.getDate() - 6);
+            return orderDate >= lastWeekStart && orderDate <= lastWeekEnd;
+          case "thismonth":
+            const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+            return orderDate >= thisMonthStart;
+          case "lastmonth":
+            const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            const lastMonthEnd = new Date(now.getFullYear(), now.getMonth(), 0);
+            return orderDate >= lastMonthStart && orderDate <= lastMonthEnd;
+          default:
+            return true;
+        }
+      });
+    }
+
+    setFilteredOrders(filtered);
+  }, [orders, columnFilters]);
 
   return (
     <>
       <div className={styles.toolbar}>
         <div>
           <h1 className={styles.topTitle}>Orders</h1>
-          <p className={styles.muted}>
-            Orders update automatically — payment confirmation and shipment booking both happen without any action needed here. Download labels below.
-          </p>
         </div>
         <div style={{ display: "flex", gap: "8px" }}>
           <button
             className={styles.button}
             onClick={() => setShowDetails(true)}
-            disabled={loading || !orders.length}
+            disabled={loading || !filteredOrders.length}
           >
             📊 View Details
           </button>
           <button
             className={`${styles.button} ${styles.buttonSecondary}`}
-            onClick={() => exportToExcel(orders)}
-            disabled={loading || !orders.length}
+            onClick={() => exportToExcel(filteredOrders)}
+            disabled={loading || !filteredOrders.length}
           >
             📥 Export Excel
           </button>
         </div>
       </div>
 
-      <StatusFilter filter={filter} setFilter={setFilter} />
-
       <section className={styles.panel}>
-        <OrdersTable orders={orders} loading={loading} authFetch={authFetch} />
+        <OrdersTable 
+          orders={filteredOrders} 
+          loading={loading} 
+          authFetch={authFetch} 
+          columnFilters={columnFilters}
+          setColumnFilters={setColumnFilters}
+        />
       </section>
 
-      {showDetails && <TransactionDetailsTable orders={orders} onClose={() => setShowDetails(false)} />}
+      {showDetails && <TransactionDetailsTable orders={filteredOrders} onClose={() => setShowDetails(false)} />}
     </>
   );
 }

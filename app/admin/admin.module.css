@@ -455,3 +455,27 @@
   padding: 18px 24px;
   border-top: 1px solid var(--border);
 }
+
+/* =========================================================
+   Column Filter Inputs
+   ========================================================= */
+
+.filterInput {
+  width: 100%;
+  padding: 6px 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 12px;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.2s;
+}
+
+.filterInput:focus {
+  outline: none;
+  border-color: var(--gold);
+}
+
+.filterInput::placeholder {
+  color: #999;
+}
