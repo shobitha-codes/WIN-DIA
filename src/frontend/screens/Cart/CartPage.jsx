@@ -9,7 +9,7 @@ import {
   FiArrowLeft, FiTruck, FiShield, FiHeart, FiPackage, FiTag
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { removeFromCart, updateQuantity, setCart, addToCart } from "@/src/frontend/redux/slices/cartSlice";
+import { removeFromCart, updateQuantity, setCart, addToCart, setPromoApplied, setPromoCode } from "@/src/frontend/redux/slices/cartSlice";
 import { addToWishlist } from "@/src/frontend/redux/slices/wishlistSlice";
 import styles from "./CartPage.module.css";
 
@@ -23,6 +23,7 @@ export default function CartPage() {
   const [mounted, setMounted] = useState(false);
   const [promo, setPromo] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoLoading, setPromoLoading] = useState(false);
 
   useEffect(() => {
     // Cart is hydrated by the Persistence component in providers.jsx (user-scoped).
@@ -67,9 +68,38 @@ export default function CartPage() {
     }
   };
 
-  const handleApplyPromo = () => {
-    if (promo.toUpperCase() === "WINDIA10") { setPromoApplied(true); toast.success("10% discount applied!"); }
-    else toast.error("Invalid promo code");
+  const handleApplyPromo = async () => {
+    if (!promo.trim()) {
+      toast.error("Please enter a promo code");
+      return;
+    }
+    
+    setPromoLoading(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promo.trim(),
+          cart_total: subtotal,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setPromoApplied(true);
+        dispatch(setPromoApplied(true)); // Save to Redux for checkout page
+        dispatch(setPromoCode(promo.trim())); // Save code to Redux
+        toast.success(`Promo applied! You saved ₹${data.data.discount_amount.toFixed(0)}`);
+      } else {
+        toast.error(data.error || "Invalid promo code");
+      }
+    } catch (error) {
+      toast.error("Failed to apply promo code");
+    } finally {
+      setPromoLoading(false);
+    }
   };
 
   const handleCheckout = () => {
@@ -201,12 +231,23 @@ export default function CartPage() {
                     className={styles.promoInput}
                   />
                   {!promoApplied ? (
-                    <button className={styles.promoBtn} onClick={handleApplyPromo}>Apply</button>
+                    <button 
+                      className={styles.promoBtn} 
+                      onClick={handleApplyPromo}
+                      disabled={promoLoading || !promo.trim()}
+                    >
+                      {promoLoading ? "..." : "Apply"}
+                    </button>
                   ) : (
-                    <button className={styles.promoRemove} onClick={() => { setPromoApplied(false); setPromo(""); }}>Remove</button>
+                    <button className={styles.promoRemove} onClick={() => { 
+                      setPromoApplied(false); 
+                      setPromo(""); 
+                      dispatch(setPromoApplied(false)); // Clear from Redux
+                      dispatch(setPromoCode("")); // Clear code from Redux
+                    }}>Remove</button>
                   )}
                 </div>
-                {promoApplied && <p className={styles.promoSuccess}>✓ WINDIA10 applied — 10% off</p>}
+                {promoApplied && <p className={styles.promoSuccess}>✓ {promo.toUpperCase()} applied</p>}
               </div>
 
               {/* Breakdown */}

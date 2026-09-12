@@ -65,6 +65,14 @@ function generateShippingLabel(order) {
   const discount = order.discount_price || 0;
   const total = order.total_price || 0;
   
+  console.log('[DEBUG] Packing slip - Pricing breakdown:', {
+    subtotal,
+    shipping,
+    discount,
+    total,
+    order_discount_price: order.discount_price
+  });
+  
   // Payment status
   const paymentStatus = order.payment_status === 'paid' ? 'PAID' : 
                         order.payment_method === 'cod' ? 'COD' : 'PENDING';

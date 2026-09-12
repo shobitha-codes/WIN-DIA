@@ -5,7 +5,7 @@ const normalize = (item, qty = 1) => ({ ...item, _id: item?._id || item?.id, id:
 
 const cartSlice = createSlice({
   name: "cart",
-  initialState: { cartItems: [], buyNowItem: null, shippingAddress: null, paymentMethod: null, promoApplied: false },
+  initialState: { cartItems: [], buyNowItem: null, shippingAddress: null, paymentMethod: null, promoApplied: false, promoCode: "" },
   reducers: {
     setCart: (s, a) => { s.cartItems = Array.isArray(a.payload) ? a.payload.map((i) => normalize(i)) : []; },
     addToCart: {
@@ -24,9 +24,13 @@ const cartSlice = createSlice({
     clearCart: (s) => { s.cartItems = []; },
     saveShippingAddress: (s, a) => { s.shippingAddress = a.payload; },
     savePaymentMethod: (s, a) => { s.paymentMethod = a.payload; },
-    setPromoApplied: (s, a) => { s.promoApplied = Boolean(a.payload); },
+    setPromoApplied: (s, a) => { 
+      s.promoApplied = Boolean(a.payload); 
+      if (!a.payload) s.promoCode = ""; // Clear code when removing promo
+    },
+    setPromoCode: (s, a) => { s.promoCode = a.payload || ""; },
   },
 });
 
-export const { setCart, addToCart, setBuyNowItem, clearBuyNowItem, removeFromCart, updateQuantity, clearCart, saveShippingAddress, savePaymentMethod, setPromoApplied } = cartSlice.actions;
+export const { setCart, addToCart, setBuyNowItem, clearBuyNowItem, removeFromCart, updateQuantity, clearCart, saveShippingAddress, savePaymentMethod, setPromoApplied, setPromoCode } = cartSlice.actions;
 export default cartSlice.reducer;

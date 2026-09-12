@@ -7,10 +7,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   FiArrowLeft, FiCheck, FiPlus, FiHome, FiBriefcase,
   FiMapPin, FiTruck, FiShield, FiCreditCard, FiPackage,
-  FiChevronRight, FiLoader
+  FiChevronRight, FiLoader, FiTag
 } from "react-icons/fi";
 import toast from "react-hot-toast";
-import { saveShippingAddress, savePaymentMethod, clearCart, clearBuyNowItem } from "@/src/frontend/redux/slices/cartSlice";
+import { saveShippingAddress, savePaymentMethod, clearCart, clearBuyNowItem, setPromoApplied, setPromoCode } from "@/src/frontend/redux/slices/cartSlice";
 import { useAuth } from "@/src/frontend/hooks/useAuth";
 import { validateAddress } from "@/src/frontend/lib/validation";
 import styles from "./CheckoutPage.module.css";
@@ -32,7 +32,7 @@ const STATES = ["Karnataka","Tamil Nadu","Kerala","Maharashtra","Delhi","Gujarat
 export default function CheckoutPage() {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { cartItems, buyNowItem, promoApplied } = useSelector((s) => s.cart);
+  const { cartItems, buyNowItem, promoApplied, promoCode } = useSelector((s) => s.cart);
   const { user, authFetch } = useAuth();
 
   // If buyNowItem is set, checkout only that single item; otherwise use full cart
@@ -46,10 +46,54 @@ export default function CheckoutPage() {
   const [payMethod, setPayMethod] = useState("razorpay");
   const [notes, setNotes] = useState("");
   const [placing, setPlacing] = useState(false);
-  const [couponCode] = useState(promoApplied ? "WINDIA10" : "");
-  const [couponApplied] = useState(promoApplied);
+  const [couponCode, setCouponCode] = useState(promoApplied ? (promoCode || "WINDIA10") : "");
+  const [couponApplied, setCouponApplied] = useState(promoApplied);
+  const [couponLoading, setCouponLoading] = useState(false);
 
   const [form, setForm] = useState({ type: "home", name: "", street: "", city: "", state: "Karnataka", pincode: "", phone: "", isDefault: false });
+
+  // Handle coupon application
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      toast.error("Please enter a coupon code");
+      return;
+    }
+    
+    setCouponLoading(true);
+    try {
+      const res = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          cart_total: subtotal,
+        }),
+      });
+      
+      const data = await res.json();
+      
+      if (data.success) {
+        setCouponApplied(true);
+        dispatch(setPromoApplied(true)); // Save to Redux
+        dispatch(setPromoCode(couponCode.trim())); // Save code to Redux
+        toast.success(`Coupon applied! You saved ₹${data.data.discount_amount.toFixed(0)}`);
+      } else {
+        toast.error(data.error || "Invalid coupon code");
+      }
+    } catch (error) {
+      toast.error("Failed to apply coupon");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const handleRemoveCoupon = () => {
+    setCouponApplied(false);
+    setCouponCode("");
+    dispatch(setPromoApplied(false)); // Clear from Redux
+    dispatch(setPromoCode("")); // Clear code from Redux
+    toast.success("Coupon removed");
+  };
 
   // Load addresses
   useEffect(() => {
@@ -499,6 +543,68 @@ export default function CheckoutPage() {
                     <span className={styles.sItemPrice}>₹{(item.price * item.qty).toFixed(0)}</span>
                   </div>
                 ))}
+              </div>
+
+              {/* Promo Code Section */}
+              <div style={{ margin: "16px 0" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: couponApplied ? "8px" : "0" }}>
+                  <FiTag style={{ color: "#D4AF37", fontSize: "18px" }} />
+                  <input
+                    type="text"
+                    placeholder="Enter promo code"
+                    value={couponCode}
+                    onChange={(e) => setCouponCode(e.target.value)}
+                    disabled={couponApplied || couponLoading}
+                    style={{
+                      flex: 1,
+                      padding: "10px 12px",
+                      border: "1px solid #E0E0E0",
+                      borderRadius: "4px",
+                      fontSize: "14px",
+                      outline: "none",
+                    }}
+                  />
+                  {!couponApplied ? (
+                    <button
+                      onClick={handleApplyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      style={{
+                        padding: "10px 16px",
+                        backgroundColor: "#D4AF37",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "4px",
+                        fontWeight: 600,
+                        cursor: couponLoading || !couponCode.trim() ? "not-allowed" : "pointer",
+                        opacity: couponLoading || !couponCode.trim() ? 0.6 : 1,
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {couponLoading ? "..." : "Apply"}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={handleRemoveCoupon}
+                      style={{
+                        padding: "10px 16px",
+                        backgroundColor: "#e53e3e",
+                        color: "#fff",
+                        border: "none",
+                        borderRadius: "4px",
+                        fontWeight: 600,
+                        cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+                {couponApplied && (
+                  <p style={{ fontSize: "13px", color: "#22c55e", fontWeight: 500, marginLeft: "26px" }}>
+                    ✓ {couponCode.toUpperCase()} applied — 10% off
+                  </p>
+                )}
               </div>
 
               <div className={styles.breakdown}>
