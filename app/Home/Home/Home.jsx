@@ -241,7 +241,7 @@ useEffect(() => {
       rgba(0,0,0,0.28)
     ), url(${slide.background})`,
     backgroundSize: "cover",
-    backgroundPosition: "center ",
+    backgroundPosition: "center",
     backgroundRepeat: "no-repeat",
   }}
 >
@@ -593,7 +593,7 @@ function FeaturedProducts() {
       style={{
         backgroundImage: `url(${featProductBg.src})`,
         backgroundRepeat: 'repeat',
-        backgroundSize: 'cover',
+        backgroundSize: 'auto',
       }}
       onClick={() => {
         Object.keys(productTimers.current).forEach(k => clearTimeout(productTimers.current[k]))
