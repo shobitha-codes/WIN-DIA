@@ -31,16 +31,19 @@ export default function StoreNav() {
     <nav className={styles.nav}>
       <div className={styles.navInner}>
 
-        {/* LOGO */}
-        <Link href="/" className={styles.brand}>
+   {/* LOGO */}
+<Link href="/" className={styles.brand}>
   <div className={styles.logoWrap}>
     <img src="/images/windia-logo.png" alt="WIN-DIA" />
-    <sup className={styles.logoTrademark}>™</sup>
   </div>
 
   <div className={styles.brandWordmark}>
     <span className={styles.brandName}>
       WIN-DIA
+    </span>
+
+    <span className={styles.brandTagline}>
+      Start your second innings
     </span>
   </div>
 </Link>

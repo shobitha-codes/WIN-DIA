@@ -218,7 +218,7 @@ export default function Footer() {
 
               <li>
                 <span className="cert-dot">✦</span>
-                DST-ITBI Supported
+                DST-iTBI Supported
               </li>
 
               <li>
@@ -241,7 +241,7 @@ export default function Footer() {
       {/* Bottom Bar */}
       <div className="footer-bar">
         <span>
-          Made with love in Mysuru 🌿
+          © 2026 WIN-DIA Foods. All rights reserved. | Designed & Developed by GSSSTBIF Students
         </span>
       </div>
     </footer>
