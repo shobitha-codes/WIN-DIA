@@ -31,7 +31,7 @@ export default function StoreNav() {
     <nav className={styles.nav}>
       <div className={styles.navInner}>
 
-       {/* LOGO */}
+   {/* LOGO */}
 <Link href="/" className={styles.brand}>
   <div className={styles.logoWrap}>
     <img src="/images/windia-logo.png" alt="WIN-DIA" />

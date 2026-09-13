@@ -504,27 +504,44 @@
 .brand {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .logoWrap img {
+  width: 55px;
+  height: 55px;
+  object-fit: contain;
   display: block;
-  height: 50px;
-  width: auto;
 }
 
 .brandWordmark {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  line-height: 1;
 }
 
 .brandName {
-  font-weight: 700;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  white-space: nowrap;
 }
 
 .brandTagline {
-  font-size: 14px;
+  margin-top: 6px;
+  font-size: 13px;
+  font-weight: 400;
   font-style: italic;
+  letter-spacing: 0.5px;
   white-space: nowrap;
 }
