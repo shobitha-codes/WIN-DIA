@@ -326,90 +326,107 @@ useEffect(() => {
 
 
 
+
 /* ============================================================
-   SECTION 1 — WHY US HERO (pill-expand version)
+   SECTION 1 — WHY US BANNER
+   Left: intro copy. Right: horizontally scrollable photo strip.
    ============================================================ */
 
 const WHY_PANELS = [
-  { label: 'Low GI', desc: 'No sugar spikes, steady energy.', bg: bgLowGi.src },
-  { label: 'High Fibre', desc: 'Keeps you fuller, longer.', bg: bgHighFibre.src },
-  { label: '0% Cholesterol', desc: 'Heart-friendly, always.', bg: bgCholesterol.src },
-  { label: 'No Maida', desc: 'Real grains, not refined flour.', bg: bgNoMaida.src },
-  { label: 'No Preservatives', desc: 'Nothing hidden or artificial.', bg: bgNoPreservatives.src },
-  { label: 'No Palm Oil', desc: 'Simple, cleaner crunch.', bg: bgNoPalmOil.src },
+  {
+    label: 'Low GI',
+    desc: 'No sugar spikes, steady energy.',
+    bg: bgLowGi.src,
+  },
+  {
+    label: 'High Fibre',
+    desc: 'Keeps you fuller, longer.',
+    bg: bgHighFibre.src,
+  },
+  {
+    label: '0% Cholesterol',
+    desc: 'Heart-friendly, always.',
+    bg: bgCholesterol.src,
+  },
+  {
+    label: 'No Maida',
+    desc: 'Real grains, not refined flour.',
+    bg: bgNoMaida.src,
+  },
+  {
+    label: 'No Preservatives',
+    desc: 'Nothing hidden or artificial.',
+    bg: bgNoPreservatives.src,
+  },
+  {
+    label: 'No Palm Oil',
+    desc: 'Simple, cleaner crunch.',
+    bg: bgNoPalmOil.src,
+  },
 ]
 
-function WhyUsPill({ panel, active, onEnter, onLeave, onTap }) {
+function WhyUsBanner() {
+  const sectionRef = useRef(null)
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const el = sectionRef.current
+    if (!el) return
+    const observer = new IntersectionObserver(
+      ([entry]) => setVisible(entry.isIntersecting),
+      { threshold: 0.1 }
+    )
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+
   return (
-    <div
-      className={`why-us-pill${active ? ' is-open' : ''}`}
-      onMouseEnter={onEnter}
-      onMouseLeave={onLeave}
-      onClick={onTap}
-      role="button"
-      tabIndex={0}
-    >
-      {active ? (
-        <div className="why-us-pill-open">
-          <div
-            className="why-us-pill-thumb"
-            style={{ backgroundImage: `url(${panel.bg})` }}
-          />
-          <span className="why-us-pill-desc">{panel.desc}</span>
+    <section className="why-us-banner" ref={sectionRef}>
+      <div className="why-us-inner">
+        {/* Left: intro copy */}
+        <div className="why-us-left">
+          <div className="why-us-eyebrow">
+            <span className="why-us-dash" />
+            Why Choose Us
+          </div>
+          <h2 className="why-us-title">
+            Honest snacking,
+            <br />
+            done right.
+          </h2>
+          <p className="why-us-sub">
+            Six things we never compromise on, so every bite is one you
+            can actually feel good about.
+          </p>
         </div>
-      ) : (
-        <span className="why-us-pill-label">{panel.label}</span>
-      )}
-    </div>
-  )
-}
 
-function WhyUsHero() {
-  const [active, setActive] = useState(null)
-  const leftCol = WHY_PANELS.slice(0, 3)
-  const rightCol = WHY_PANELS.slice(3)
-
-  return (
-    <section className="why-us">
-      <div
-        className="why-us-visual"
-        style={{ backgroundImage: `url(${whyusBg.src})` }}
-      >
-        <h2 className="why-us-heading">Honest snacking, done right.</h2>
-      </div>
-
-      <div className="why-us-pillgrid">
-        <div className="why-us-col why-us-col-left">
-          {leftCol.map((p, i) => (
-            <WhyUsPill
+        {/* Right: horizontally scrollable photo strip */}
+        <div className="why-us-scroll" role="list">
+          {WHY_PANELS.map((p, i) => (
+            <motion.div
               key={p.label}
-              panel={p}
-              active={active === i}
-              onEnter={() => setActive(i)}
-              onLeave={() => setActive(null)}
-              onTap={() => setActive(active === i ? null : i)}
-            />
+              className="why-us-card"
+              role="listitem"
+              tabIndex={0}
+              style={{ backgroundImage: `url(${p.bg})` }}
+              initial={{ opacity: 0, y: 16 }}
+              animate={visible ? { opacity: 1, y: 0 } : { opacity: 0, y: 16 }}
+              transition={{ duration: 0.5, delay: i * 0.06 }}
+            >
+              <div className="why-us-scrim" />
+              <span className="why-us-num">{String(i + 1).padStart(2, '0')}</span>
+              <div className="why-us-body">
+                <div className="why-us-h">{p.label}</div>
+                <p className="why-us-d">{p.desc}</p>
+              </div>
+            </motion.div>
           ))}
-        </div>
-        <div className="why-us-col why-us-col-right">
-          {rightCol.map((p, i) => {
-            const idx = i + 3
-            return (
-              <WhyUsPill
-                key={p.label}
-                panel={p}
-                active={active === idx}
-                onEnter={() => setActive(idx)}
-                onLeave={() => setActive(null)}
-                onTap={() => setActive(active === idx ? null : idx)}
-              />
-            )
-          })}
         </div>
       </div>
     </section>
   )
 }
+
 
 
 /* ============================================================
@@ -1445,7 +1462,8 @@ export default function Home(){
         <>
           <BannerStrip position="homepage" />
           <HeroSection />
-          <WhyUsHero/>
+        {/*<WhyUsHero/>*/}
+        <WhyUsBanner></WhyUsBanner>
           <RangeCategories />
           <FeaturedProducts />
           <Testimonials />
