@@ -12,6 +12,7 @@ import {
 import toast from "react-hot-toast";
 import { saveShippingAddress, savePaymentMethod, clearCart, clearBuyNowItem, setPromoApplied, setPromoCode, getCartItemKey } from "@/src/frontend/redux/slices/cartSlice";
 import { comboSummary } from "@/src/frontend/lib/comboFlavors";
+import { calculateOrderBundlePricing } from "@/src/frontend/lib/pricing";
 import { useAuth } from "@/src/frontend/hooks/useAuth";
 import { validateAddress } from "@/src/frontend/lib/validation";
 import styles from "./CheckoutPage.module.css";
@@ -185,19 +186,22 @@ export default function CheckoutPage() {
   // However, we need to apply tiered pricing across ALL bundles in the order.
   // The server independently recalculates using tiered pricing, so this is for preview.
   
-  // Calculate total bundles in order for tiered pricing
-  const totalBundles = checkoutItems.reduce((sum, i) => sum + i.qty, 0);
-  
-  // For display purposes, calculate what the server will charge using tiered pricing
-  // Formula: total = 384 + (N - 1) × 256
-  const tieredTotal = 384 + (Math.max(1, totalBundles) - 1) * 256;
-  
-  const subtotal = tieredTotal;
-  const discount = couponApplied ? subtotal * 0.1 : 0;
+  // The offer is determined ONCE from the total bundle count across the whole
+  // order (never per flavour) using the same source of truth as the backend.
+  const orderPricing = calculateOrderBundlePricing(checkoutItems.map((i) => i.qty));
+  const {
+    totalBundles,
+    regularPrice,
+    discount: bundleDiscount,
+    subtotal,
+    bonusPackets,
+  } = orderPricing;
+
+  const couponDiscount = couponApplied ? subtotal * 0.1 : 0;
   const shipping = 0; // FREE DELIVERY — always ₹0, enforced server-side
   // GST is deactivated: no separate tax line is added. Price shown already
   // includes GST rather than adding it on top — see bundle-pricing.constants.ts.
-  const total = subtotal - discount + shipping;
+  const total = subtotal - couponDiscount + shipping;
 
   const handleSaveAddress = async () => {
     const errors = validateAddress(form);
@@ -779,10 +783,22 @@ export default function CheckoutPage() {
 
               <div className={styles.breakdown}>
                 <div className={styles.bRow}>
-                  <span>{totalBundles} {totalBundles === 1 ? 'Bundle' : 'Bundles'} × 6 packets each</span>
-                  <span>₹{subtotal.toFixed(0)}</span>
+                  <span>{totalBundles} {totalBundles === 1 ? 'Bundle' : 'Bundles'} × ₹384</span>
+                  <span>₹{regularPrice.toFixed(0)}</span>
                 </div>
-                {couponApplied && <div className={`${styles.bRow} ${styles.bDiscount}`}><span>Discount (10%)</span><span>−₹{discount.toFixed(2)}</span></div>}
+                {bonusPackets > 0 && (
+                  <div className={styles.bRow}>
+                    <span>Bonus packets</span>
+                    <span>{bonusPackets} FREE</span>
+                  </div>
+                )}
+                {bundleDiscount > 0 && (
+                  <div className={`${styles.bRow} ${styles.bDiscount}`}>
+                    <span>Bundle discount</span>
+                    <span>−₹{bundleDiscount.toFixed(0)}</span>
+                  </div>
+                )}
+                {couponApplied && <div className={`${styles.bRow} ${styles.bDiscount}`}><span>Coupon discount (10%)</span><span>−₹{couponDiscount.toFixed(2)}</span></div>}
                 <div className={styles.bRow}><span>Shipping</span><span className={styles.free}>FREE</span></div>
               </div>
 

@@ -5,6 +5,8 @@
  * Updated for 6-packet bundle structure (240g per bundle)
  */
 
+import { calculateBundlePricing } from '../../constants/bundle-pricing.constants';
+
 describe('Weight Calculation Integration', () => {
   describe('Order Items Weight Storage', () => {
     it('should store 240g per bundle for qty=1', () => {
@@ -145,41 +147,34 @@ describe('Weight Calculation Integration', () => {
     });
   });
 
-  describe('Tiered Bundle Pricing', () => {
-    it('should calculate ₹384 for 1 bundle', () => {
-      const bundles = 1;
-      const price = 384 + (bundles - 1) * 256;
-      
-      expect(price).toBe(384);
+  describe('Exact Bundle Pricing', () => {
+    it('should calculate ₹384 for 1 bundle (no bonus, no discount)', () => {
+      expect(calculateBundlePricing(1)).toMatchObject({
+        regularPrice: 384, discount: 0, lineTotal: 384, bonusPackets: 0,
+      });
     });
 
-    it('should calculate ₹640 for 2 bundles', () => {
-      const bundles = 2;
-      const price = 384 + (bundles - 1) * 256;
-      
-      expect(price).toBe(640);
+    it('should calculate ₹640 for 2 bundles (2 bonus packets, ₹128 discount)', () => {
+      expect(calculateBundlePricing(2)).toMatchObject({
+        regularPrice: 768, discount: 128, lineTotal: 640, bonusPackets: 2,
+      });
     });
 
-    it('should calculate ₹896 for 3 bundles', () => {
-      const bundles = 3;
-      const price = 384 + (bundles - 1) * 256;
-      
-      expect(price).toBe(896);
+    it('should calculate ₹960 for 3 bundles (3 bonus packets, ₹192 discount)', () => {
+      expect(calculateBundlePricing(3)).toMatchObject({
+        regularPrice: 1152, discount: 192, lineTotal: 960, bonusPackets: 3,
+      });
     });
 
-    it('should calculate ₹1152 for 4 bundles', () => {
-      const bundles = 4;
-      const price = 384 + (bundles - 1) * 256;
-      
-      expect(price).toBe(1152);
+    it('should calculate ₹1280 for 4 bundles (4 bonus packets, ₹256 discount)', () => {
+      expect(calculateBundlePricing(4)).toMatchObject({
+        regularPrice: 1536, discount: 256, lineTotal: 1280, bonusPackets: 4,
+      });
     });
 
-    it('should preserve packets_shipped calculation for inventory', () => {
-      const PACKETS_SHIPPED_PER_BUNDLE = 6;
-      const bundles = 2;
-      const packetsShipped = bundles * PACKETS_SHIPPED_PER_BUNDLE;
-      
-      expect(packetsShipped).toBe(12);
+    it('should include bonus packets in packets shipped for fulfilment', () => {
+      expect(calculateBundlePricing(2).packetsPaid).toBe(12);
+      expect(calculateBundlePricing(2).packetsShipped).toBe(14);
     });
   });
 });

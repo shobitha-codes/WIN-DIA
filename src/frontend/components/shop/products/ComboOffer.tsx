@@ -8,7 +8,7 @@ import { ProductRange } from "./GlutenFree";
 export function ComboOffer() {
   return (
     <ProductRange
-      heading="The Combo Offer"
+      heading="Assorted Combo Offer"
       headingId="combo-offer-heading"
       products={[comboOffer]}
       theme="combo"

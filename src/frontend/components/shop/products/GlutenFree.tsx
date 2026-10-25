@@ -25,7 +25,8 @@ type ProductRangeProps = {
 
 /**
  * ProductRange component displays a section of products.
- * Each product is a 12-pack bundle (12 × 40g = 480g) priced at ₹640.
+ * Each product is a 6-pack bundle (6 × 40g = 240g) priced at ₹384.
+ * Multi-bundle offers are calculated order-wide in the cart and checkout.
  *
  * Clicking a card takes you to /product/[id] page.
  * Adding to cart/wishlist requires a logged-in Supabase session.
@@ -180,7 +181,7 @@ type GlutenFreeProps = {
 export function GlutenFree({ products }: GlutenFreeProps) {
   return (
     <ProductRange
-      heading="Our Products"
+      heading="FibreRich Thins Flavours"
       headingId="products-heading"
       products={products ?? allProducts}
       theme="everyday"

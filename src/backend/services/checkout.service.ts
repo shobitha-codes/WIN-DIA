@@ -15,7 +15,7 @@ import { ProductRepository } from '../repositories/product.repository';
 import { OrderRepository } from '../repositories/order.repository';
 import { logger } from '../utils/logger.util';
 import { container, RepositoryTokens, ServiceTokens } from '../providers/container.provider';
-import { BundlePricing, calculateBundlePricing, calculateOrderBundlePricing, calculateOrderTotal } from '../constants/bundle-pricing.constants';
+import { BundlePricing, calculateOrderBundlePricing, calculateOrderTotal } from '../constants/bundle-pricing.constants';
 import { parseComboSelections } from '../constants/combo-flavors.constants';
 import { autoBookShipment } from './auto-shipment.util';
 
@@ -31,6 +31,10 @@ export interface CheckoutResult {
     tax: number;
     shipping: number;
     total: number;
+    regularSubtotal?: number;
+    bundleDiscount?: number;
+    bonusPackets?: number;
+    totalBundles?: number;
   };
 }
 
@@ -40,7 +44,15 @@ export interface CheckoutService {
 
 interface PreparedOrderItems {
   preparedOrderItems: Record<string, unknown>[];
+  /** Final payable subtotal after the order-wide bundle discount */
   subtotal: number;
+  /** Full pre-discount regular price (bundles × ₹384) */
+  regularSubtotal: number;
+  /** Order-wide bundle discount (₹0, ₹128, ₹192 or ₹256 for 1–4 bundles) */
+  bundleDiscount: number;
+  /** Order-wide free bonus packets (0, 2, 3 or 4 for 1–4 bundles) */
+  bonusPackets: number;
+  totalBundles: number;
 }
 
 interface CouponOutcome {
@@ -271,7 +283,7 @@ export class CheckoutServiceImpl implements CheckoutService {
 
       // SECURITY: Fetch authoritative product weight from database, ignore frontend-submitted weight
       const catalogProduct = prodExistsCheck.value;
-      const catalogWeight = catalogProduct.net_weight; // e.g., "480g" from products table
+      const catalogWeight = catalogProduct.net_weight; // e.g., "240g" from products table
 
       let weightPerBundle: number;
       if (typeof catalogWeight === 'string') {
@@ -318,12 +330,26 @@ export class CheckoutServiceImpl implements CheckoutService {
       });
     }
 
+    // SERVER-SIDE PRICE ENFORCEMENT: Never trust frontend-sent price.
+    // The exact offer is determined ONCE from the total bundle count across the
+    // whole order, so bonus packets and discounts are never recalculated
+    // per flavour. Quantities above four preserve the legacy behaviour.
+    const orderPricing = calculateOrderBundlePricing(drafts.map((d) => d.bundles));
+    const subtotal = orderPricing.subtotal;
+
+    // Bonus packets are granted order-wide (one per bundle for 2–4 bundles).
+    // Distribute them proportionally when validating stock and booking weight,
+    // without changing the paid bundle quantity or creating paid line items.
+    const bonusPerBundle = orderPricing.totalBundles > 0
+      ? orderPricing.bonusPackets / orderPricing.totalBundles
+      : 0;
+
     // Stock validation: check against packets to be SHIPPED, summed per product.
     // Several lines can point at the same product (e.g. combos with different
     // flavour selections), so each line passing alone is not enough.
     const packetsByProduct = new Map<string, number>();
     for (const d of drafts) {
-      const packets = calculateBundlePricing(d.bundles).packetsShipped;
+      const packets = d.bundles * (BundlePricing.PACKETS_SHIPPED_PER_BUNDLE + bonusPerBundle);
       packetsByProduct.set(d.productId, (packetsByProduct.get(d.productId) || 0) + packets);
     }
     for (const [productId, packetsNeeded] of packetsByProduct) {
@@ -332,36 +358,48 @@ export class CheckoutServiceImpl implements CheckoutService {
       if (!stockRes.success) {
         const info = productsById.get(productId);
         console.log(`[TRACE STEP 4: STOCK_VALIDATION] Insufficient stock for productId=${productId}:`, stockRes.error);
-        const bundlesNeeded = packetsNeeded / BundlePricing.PACKETS_SHIPPED_PER_BUNDLE;
+        const packetsPerBundleWithBonus = BundlePricing.PACKETS_SHIPPED_PER_BUNDLE + bonusPerBundle;
+        const bundlesNeeded = Math.round(packetsNeeded / packetsPerBundleWithBonus);
         return failure(new ValidationError(
-          `Insufficient stock for "${info?.name || 'product'}". You ordered ${bundlesNeeded} bundle(s) (${packetsNeeded} packets) but only ${info?.stock ?? 0} packet(s) are in stock.`
+          `Insufficient stock for "${info?.name || 'product'}". You ordered ${bundlesNeeded} bundle(s) (${packetsNeeded} packets` +
+          `${bonusPerBundle > 0 ? ' including free bonus packets' : ''}) but only ${info?.stock ?? 0} packet(s) are in stock.`
         ));
       }
     }
 
-    // SERVER-SIDE PRICE ENFORCEMENT: Never trust frontend-sent price.
-    // Tiered pricing over the whole order: total = 384 + (N - 1) × 256
-    const orderPricing = calculateOrderBundlePricing(drafts.map((d) => d.bundles));
-    const subtotal = orderPricing.subtotal;
-
     const preparedOrderItems: Record<string, unknown>[] = drafts.map((d) => ({
       product_id: d.productId,
       name: d.displayName,
-      // Per-bundle price: the order's average price per bundle at its tier
-      price: orderPricing.unitPrice,
-      // qty = number of bundles ordered
+      // Per-bundle price is always the regular ₹384. The order-wide bundle
+      // discount is recorded separately on the order (never folded into or
+      // trusted from a client-submitted price).
+      price: BundlePricing.BUNDLE_PRICE,
+      // qty = number of PAID bundles ordered (bonus packets are not paid items)
       qty: d.bundles,
       flavor: d.flavor,
-      // CRITICAL: Store weight PER BUNDLE (not total line weight)
-      // DTDC will multiply this by qty to get total weight
-      net_weight_grams: d.weightPerBundle,
+      // CRITICAL: Store weight PER BUNDLE (not total line weight).
+      // DTDC multiplies this by qty, so include the free bonus packets here.
+      // They are fulfilment extras, not extra paid line items.
+      net_weight_grams: d.weightPerBundle + (bonusPerBundle * BundlePricing.PACKET_WEIGHT_GRAMS),
       image: d.image,
     }));
 
     const step4Time = Date.now() - step4Start;
-    console.log(`[TRACE STEP 4: ORDER_PAYLOAD_CREATION] SUCCESS | Time: ${step4Time}ms | Subtotal: ${subtotal}`, preparedOrderItems);
+    console.log(
+      `[TRACE STEP 4: ORDER_PAYLOAD_CREATION] SUCCESS | Time: ${step4Time}ms | ` +
+      `Regular: ${orderPricing.regularPrice} | Bundle discount: ${orderPricing.discount} | ` +
+      `Final subtotal: ${subtotal} | Bonus packets: ${orderPricing.bonusPackets}`,
+      preparedOrderItems
+    );
 
-    return success({ preparedOrderItems, subtotal });
+    return success({
+      preparedOrderItems,
+      subtotal,
+      regularSubtotal: orderPricing.regularPrice,
+      bundleDiscount: orderPricing.discount,
+      bonusPackets: orderPricing.bonusPackets,
+      totalBundles: orderPricing.totalBundles,
+    });
   }
 
   /**
@@ -608,18 +646,34 @@ export class CheckoutServiceImpl implements CheckoutService {
       // STEP 4: ORDER_PAYLOAD_CREATION & STOCK_VALIDATION (BUNDLE PRICING ENFORCED)
       const preparedRes = await this.prepareOrderItems(rawItems);
       if (!preparedRes.success) return failure(preparedRes.error);
-      const { preparedOrderItems, subtotal } = preparedRes.value;
+      const {
+        preparedOrderItems,
+        subtotal,
+        regularSubtotal,
+        bundleDiscount,
+        bonusPackets,
+        totalBundles,
+      } = preparedRes.value;
 
       // STEP 5: COUPON_VALIDATION
+      // Coupons apply to the final bundle-offer subtotal, not the regular price.
       const couponRes = await this.applyCoupon(dto, subtotal);
       if (!couponRes.success) return failure(couponRes.error);
-      const { discount, validatedCouponId } = couponRes.value;
+      const { discount: couponDiscount, validatedCouponId } = couponRes.value;
 
       // STEP 6: PRICING_CALCULATION (SERVER-SIDE ONLY — FREE DELIVERY ENFORCED)
       // Shipping is ALWAYS ₹0. This is hardcoded and cannot be overridden by frontend.
-      const orderPricing = calculateOrderTotal(subtotal, discount);
+      // The order stores the regular items price and the combined bundle + coupon
+      // discount, so items_price − discount_price always equals the payable total.
+      const totalDiscount = bundleDiscount + couponDiscount;
+      const orderPricing = calculateOrderTotal(regularSubtotal, totalDiscount);
       const { shipping, tax, total } = orderPricing;
-      console.log(`[TRACE STEP 6: PRICING_CALCULATION] Pricing (FREE DELIVERY enforced):`, orderPricing);
+      console.log(
+        `[TRACE STEP 6: PRICING_CALCULATION] Pricing (FREE DELIVERY enforced) | ` +
+        `Bundles: ${totalBundles} | Bonus packets: ${bonusPackets} | ` +
+        `Bundle discount: ${bundleDiscount} | Coupon discount: ${couponDiscount}:`,
+        orderPricing
+      );
 
       // STEP 7 (+ fallback / STEP 8): ORDER_CREATION
       // Placeholder written to the initial order-creation transaction's payment row.
@@ -636,7 +690,7 @@ export class CheckoutServiceImpl implements CheckoutService {
         selectedAddress,
         preparedOrderItems,
         selectedPaymentMethod,
-        { subtotal, discount, tax, shipping, total },
+        orderPricing,
         pendingPaymentPlaceholderId
       );
       if (!orderCreationRes.success) return failure(orderCreationRes.error);
@@ -679,8 +733,12 @@ export class CheckoutServiceImpl implements CheckoutService {
         razorpayOrderId: createdPayment?.provider_order_id || '',
         shipment: createdShipment,
         pricing: {
-          subtotal,
-          discount,
+          subtotal: orderPricing.subtotal,
+          regularSubtotal,
+          bundleDiscount,
+          bonusPackets,
+          totalBundles,
+          discount: totalDiscount,
           tax,
           shipping,
           total,

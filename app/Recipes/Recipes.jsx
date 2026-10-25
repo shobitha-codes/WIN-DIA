@@ -658,8 +658,8 @@ function HeroSection() {
           <span className="win-rc-eyebrow-bar" />
         </div>
         <h1 className="win-rc-hero-h1">
-          Beyond Snacking<br />
-          <em>with WIN-DIA</em>
+          Recipes with<br />
+          <em>WIN-DIA Thins</em>
         </h1>
         <p className="win-rc-hero-desc">
           Transform your favourite Thins into pizzas, chaats, sandwiches, desserts and more.

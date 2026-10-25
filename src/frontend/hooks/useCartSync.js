@@ -2,6 +2,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector, useStore } from "react-redux";
 import { setCart } from "@/src/frontend/redux/slices/cartSlice";
+import { BundlePricing } from "@/src/frontend/lib/pricing";
 import { useAuth } from "./useAuth";
 
 // Combo lines carry a flavour selection that the backend cart (product_id +
@@ -209,7 +210,7 @@ async function enrichCartItems(items) {
       const product = productMap.get(item.product_id);
 
       // Parse net_weight from product catalog
-      let netWeight = 480; // Default: one bundle = 12 × 40g = 480g
+      let netWeight = BundlePricing.BUNDLE_WEIGHT_GRAMS; // 1 bundle = 6 × 40g = 240g
       if (product?.net_weight) {
         if (typeof product.net_weight === "string") {
           const parsed = parseInt(product.net_weight.replace(/[^0-9]/g, ""), 10);
@@ -228,7 +229,7 @@ async function enrichCartItems(items) {
         id: item.product_id,
         _id: item.product_id,
         name,
-        price: product?.price ?? 640,
+        price: product?.price ?? BundlePricing.BUNDLE_PRICE,
         image: product?.image || product?.image_url || "/images/product-methi.jpg",
         flavor: product?.flavor || null,
         qty: item.quantity || 1,
@@ -244,9 +245,10 @@ async function enrichCartItems(items) {
       id: item.product_id,
       _id: item.product_id,
       name: "WIN-DIA Product",
-      price: 640,
+      price: BundlePricing.BUNDLE_PRICE,
       image: "/images/product-methi.jpg",
       qty: item.quantity || 1,
+      netWeight: BundlePricing.BUNDLE_WEIGHT_GRAMS,
       isComboProduct: false,
     }));
   }

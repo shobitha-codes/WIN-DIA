@@ -3,7 +3,13 @@ import { comboOffer, everydayProducts, glutenFreeProducts } from "@/src/frontend
 import { toRouteId, type Product, type ProductTheme } from "./productShared";
 
 // One "entry" pairs a product with its theme and route id
-type Entry = { readonly theme: ProductTheme; readonly product: Product; readonly routeId: string };
+export type ProductEntry = {
+  readonly theme: ProductTheme;
+  readonly product: Product;
+  readonly routeId: string;
+};
+
+type Entry = ProductEntry;
 
 /**
  * Flattens all product collections into entries.
@@ -31,6 +37,11 @@ function allEntries(): readonly Entry[] {
 export function findProductByRouteId(routeId: string): { product: Product; theme: ProductTheme } | null {
   const match = allEntries().find((entry) => entry.routeId === routeId);
   return match ? { product: match.product, theme: match.theme } : null;
+}
+
+/** Returns every product entry, used by the sitemap and structured data. */
+export function getAllProductEntries(): readonly ProductEntry[] {
+  return allEntries();
 }
 
 /**

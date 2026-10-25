@@ -10,10 +10,11 @@ import comboImage from "@/src/frontend/assets/images/products/combo/combo-offer.
 
 /**
  * WIN-DIA FibreRich Product Catalogue
- * NEW BUNDLE STRUCTURE (Updated):
- * - 1 bundle = 6 packets (6 × 40g = 240g) at ₹384 (no discount)
- * - 2 bundles = 12 packets at ₹640 (10 paid + 2 free)
- * - 3 bundles = 18 packets at ₹896 (14 paid + 4 free)
+ * EXACT BUNDLE OFFER (order-wide across all flavours):
+ * - 1 bundle = 6 packets (6 × 40g = 240g) at ₹384 (no discount, no bonus)
+ * - 2 bundles = 12 paid packets + 2 bonus, ₹768 − ₹128 = ₹640
+ * - 3 bundles = 18 paid packets + 3 bonus, ₹1,152 − ₹192 = ₹960
+ * - 4 bundles = 24 paid packets + 4 bonus, ₹1,536 − ₹256 = ₹1,280
  * - Users can only order in multiples of 6 packets (6, 12, 18, 24...)
  * 
  * Each packet is 40g at ₹64

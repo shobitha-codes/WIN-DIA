@@ -2,6 +2,7 @@
 import "./Contact.css";
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { SOCIAL_LINKS } from '@/src/frontend/lib/constants';
 
 const Contact = () => {
   const [form, setForm] = useState({ 
@@ -70,7 +71,7 @@ const Contact = () => {
         <div className="win-container">
           <div className={`win-hero-content ${isVisible ? 'win-animate-in' : ''}`}>
             <span className="win-hero-badge">Contact Us</span>
-            <h1 className="win-hero-title">Let's Connect</h1>
+            <h1 className="win-hero-title">Contact WIN-DIA Foods</h1>
             <div className="win-hero-line"></div>
             <p className="win-hero-subtitle">
               We'd love to hear from you. Whether you have a question about an order, 
@@ -149,7 +150,7 @@ const Contact = () => {
 
       {/* Instagram */}
       <a
-        href="https://www.instagram.com/Kalpavristi_Coco_FAB/"
+        href={SOCIAL_LINKS.instagram}
         target="_blank"
         rel="noopener noreferrer"
         className="win-social-link-vertical"

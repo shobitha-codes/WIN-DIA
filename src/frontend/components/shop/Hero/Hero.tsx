@@ -30,9 +30,9 @@ export function Hero() {
       <HeroContent
         heading={
           <>
-            100% Natural
+            Shop WIN-DIA
             <br />
-            GI &lt; 48
+            FibreRich Thins
           </>
         }
         headingId="shop-hero-heading"

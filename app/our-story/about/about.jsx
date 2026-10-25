@@ -228,11 +228,11 @@ return (
   </p>
 
   <h1 className="about-hero-title">
-    Old Wisdom.
+    Our Story:
     <br />
 
     <span className="about-hero-title-italic">
-      New Crunch.
+      Rooted in Tradition
     </span>
   </h1>
 

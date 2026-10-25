@@ -7,6 +7,7 @@ import { motion, useReducedMotion } from 'framer-motion'
 import Image from 'next/image';
 import BannerStrip from "@/src/frontend/components/BannerStrip/BannerStrip";
 import WhatsAppButton from "@/src/frontend/components/WhatsAppButton/WhatsAppButton";
+import { SOCIAL_LINKS } from "@/src/frontend/lib/constants";
 
 import jeeraBg  from './jeera-bg.png'
 import garlicBg  from './garlic-bg.png'
@@ -96,10 +97,10 @@ const SLIDES = [
     announceMsg: 'Free delivery on orders above ₹299 · 100% Natural · FSSAI Certified',
     heroBg: '#1a0f05',
   },
-  { type: 'flavour', flavour: 'Jeera',    background: jeeraBg.src,   bg: '#6F4A2D', accent: '#f5deb3', textColor: '#fff8f0', tagline: 'Earthy & Warm',     headline: 'Jeera\nFlavour',   sub: 'The classic Indian spice — bold, aromatic and guilt-free.',       badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#d4873a' },
-  { type: 'flavour', flavour: 'Garlic',    background: garlicBg.src,  bg: '#E1ACAC', accent: '#f4c89a', textColor: '#fff5f0', tagline: 'Bold & Punchy',      headline: 'Garlic\nFlavour',  sub: 'Intense roasted garlic in every crisp, wholesome bite.',         badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#a03535' },
-  { type: 'flavour', flavour: 'Onion',    background: onionBg.src,   bg: '#A888B5', accent: '#f0c4f0', textColor: '#fff0ff', tagline: 'Sweet & Savoury',    headline: 'Onion\nFlavour',   sub: 'Caramelised onion warmth baked into every thin crisp.',          badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#8c4f8c' },
-  { type: 'flavour', flavour: 'Curry',    background: curryBg.src,   bg: '#468432', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'Distinctly Desi',    headline: 'Curry\nFlavour',   sub: 'Aromatic curry flavour in every crunchy bite.',                  badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25' },
+  { type: 'flavour', flavour: 'Jeera',    background: jeeraBg.src,   bg: '#6F4A2D', accent: '#f5deb3', textColor: '#fff8f0', tagline: 'Earthy & Warm',     headline: 'Jeera\nFlavour Thins',   sub: 'The classic Indian spice — bold, aromatic and guilt-free.',       badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#d4873a' },
+  { type: 'flavour', flavour: 'Garlic',    background: garlicBg.src,  bg: '#E1ACAC', accent: '#f4c89a', textColor: '#fff5f0', tagline: 'Bold & Punchy',      headline: 'Garlic\nFlavour Thins',  sub: 'Intense roasted garlic in every crisp, wholesome bite.',         badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#a03535' },
+  { type: 'flavour', flavour: 'Onion',    background: onionBg.src,   bg: '#A888B5', accent: '#f0c4f0', textColor: '#fff0ff', tagline: 'Sweet & Savoury',    headline: 'Onion\nFlavour Thins',   sub: 'Caramelised onion warmth baked into every thin crisp.',          badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#8c4f8c' },
+  { type: 'flavour', flavour: 'Curry',    background: curryBg.src,   bg: '#468432', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'Distinctly Desi',    headline: 'Curry\nFlavour Thins',   sub: 'Aromatic curry flavour in every crunchy bite.',                  badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25' },
   { type: 'flavour', flavour: 'All Flavours', background: all4.src,  bg: '#637d25', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'The Complete Collection', headline: 'All\nFlavours', sub: 'Discover every delicious WIN-DIA Thins flavour.', badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25' }
 ]
 
@@ -209,7 +210,7 @@ useEffect(() => {
     <div className="hero-video-content">
       <p className="hero-eyebrow">{getContent('hero.eyebrow', 'WIN-DIA · FIBRERICH')}</p>
       <h1 className="hero-title video-title">
-        Coconut<br /><em>Infused</em> Thins
+        Coconut Flour<br /><em>Thins</em>
       </h1>
       <div className="hero-stats">
         <div className="stat">
@@ -506,7 +507,7 @@ const FEATURED_PRODUCTS = [
     opening: onionOpening.src,
     open: onionOpen.src,
     name: 'Onion Thins',
-    price: '₹___',
+    href: '/product/everyday-onion',
   },
   {
     base: jeeraBase.src,
@@ -514,7 +515,7 @@ const FEATURED_PRODUCTS = [
     opening: jeeraOpening.src,
     open: jeeraOpen.src,
     name: 'Jeera Thins',
-    price: '₹180',
+    href: '/product/everyday-jeera',
   },
   {
     base: curryBase.src,
@@ -522,7 +523,7 @@ const FEATURED_PRODUCTS = [
     opening: curryOpening.src,
     open: curryOpen.src,
     name: 'Curry Leaf Thins',
-    price: '₹180',
+    href: '/product/everyday-curry-leaf',
   },
   {
     base: garlicBase.src,
@@ -530,7 +531,7 @@ const FEATURED_PRODUCTS = [
     opening: garlicOpening.src,
     open: garlicOpen.src,
     name: 'Garlic Thins',
-    price: '₹200',
+    href: '/product/everyday-garlic',
   },
 ]
 
@@ -607,11 +608,11 @@ function FeaturedProducts() {
                 <div className="featured-name">{p.name}</div>
                 
                 <Link
-                  href="/shop"
+                  href={p.href}
                   className="featured-add"
                   onClick={e => e.stopPropagation()}
                 >
-                  Explore
+                  View {p.name}
                 </Link>
               </div>
             </div>
@@ -1109,7 +1110,6 @@ function Testimonials() {
    ============================================================ */
 
 function FounderSection(){
-  <h1>Healthy Thins</h1>
   const reducedMotion = useReducedMotion();
   const viewProps = (delay = 0) => (
     reducedMotion
@@ -1355,7 +1355,7 @@ function CommunityShowcase(){
             <motion.div className="com-bottom-cta" initial={{opacity:0,y:20}} whileInView={{opacity:1,y:0}} viewport={{once:true}} transition={{duration:0.6,delay:0.3}}>
               <p className="com-bottom-cta-text">Discover our community stories</p>
               <div className="com-bottom-cta-row">
-                <a href="https://www.instagram.com/win_dia_foods/" target="_blank" rel="noopener noreferrer" className="com-insta-link">
+                <a href={SOCIAL_LINKS.instagram} target="_blank" rel="noopener noreferrer" className="com-insta-link">
                   <svg fill="currentColor" viewBox="0 0 24 24" width="28" height="28"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
                   <span>win_dia_foods</span>
                 </a>
@@ -1363,7 +1363,7 @@ function CommunityShowcase(){
                   className="com-join-btn"
                   onClick={() =>
                     window.open(
-                      "https://www.instagram.com/win_dia_foods/",
+                      SOCIAL_LINKS.instagram,
                       "_blank"
                     )
                   }

@@ -1,60 +1,54 @@
 /**
  * WIN-DIA Frontend Pricing Utilities
  * ───────────────────────────────────
- * Client-side pricing calculations that MUST match backend bundle-pricing.constants.ts
- * 
- * IMPORTANT: These are for DISPLAY ONLY. The backend independently validates all prices.
- * Never submit these client-calculated prices to the server expecting them to be trusted.
+ * Client-side pricing helpers that delegate to the SAME source of truth as the
+ * backend (src/backend/constants/bundle-pricing.constants.ts).
+ *
+ * IMPORTANT: These are for DISPLAY ONLY. The backend independently validates all
+ * prices and never trusts a client-submitted discount or final price.
  */
 
+import {
+  BundlePricing,
+  calculateBundlePricing,
+  calculateOrderBundlePricing,
+} from "@/src/backend/constants/bundle-pricing.constants";
+
+export { BundlePricing, calculateBundlePricing, calculateOrderBundlePricing };
+
 /**
- * Bundle pricing constants (must match backend)
+ * Bundle configuration (kept for existing frontend imports).
  */
 export const BUNDLE_CONFIG = {
-  PACKETS_PER_BUNDLE: 6,
-  PACKET_WEIGHT_GRAMS: 40,
-  BUNDLE_WEIGHT_GRAMS: 240,
-  MIN_BUNDLES: 1,
-  MAX_BUNDLES: 50,
+  PACKETS_PER_BUNDLE: BundlePricing.PACKETS_PER_BUNDLE,
+  PACKET_WEIGHT_GRAMS: BundlePricing.PACKET_WEIGHT_GRAMS,
+  BUNDLE_WEIGHT_GRAMS: BundlePricing.BUNDLE_WEIGHT_GRAMS,
+  MIN_BUNDLES: BundlePricing.MIN_BUNDLES,
+  MAX_BUNDLES: BundlePricing.MAX_BUNDLES_PER_ITEM,
 } as const;
 
 /**
- * Calculates tiered pricing for N bundles.
- * Formula: total = 384 + (N - 1) × 256
- * 
+ * Total final price for N bundles (regular price minus bundle discount).
+ *
  * Examples:
  * - 1 bundle = ₹384
  * - 2 bundles = ₹640
- * - 3 bundles = ₹896
- * - 4 bundles = ₹1152
- * 
- * @param bundles - Number of bundles (must be >= 1)
- * @returns Total price for the given number of bundles
+ * - 3 bundles = ₹960
+ * - 4 bundles = ₹1,280
  */
 export function calculateBundlePrice(bundles: number): number {
-  const validBundles = Math.max(1, Math.floor(bundles));
-  return 384 + (validBundles - 1) * 256;
+  return calculateBundlePricing(bundles).lineTotal;
 }
 
 /**
- * Calculates the per-bundle unit price for a given quantity.
- * This is the average price per bundle considering the tiered discount.
- * 
- * @param bundles - Number of bundles
- * @returns Average price per bundle
+ * Average per-bundle price for a given quantity.
  */
 export function calculateUnitPrice(bundles: number): number {
-  const validBundles = Math.max(1, Math.floor(bundles));
-  const total = calculateBundlePrice(validBundles);
-  return Math.round(total / validBundles);
+  return calculateBundlePricing(bundles).unitPrice;
 }
 
 /**
  * Formats a price for display with rupee symbol.
- * 
- * @param amount - Price in rupees
- * @param showDecimals - Whether to show decimal places (default: false)
- * @returns Formatted price string (e.g., "₹384")
  */
 export function formatPrice(amount: number, showDecimals = false): string {
   if (showDecimals) {
@@ -64,26 +58,26 @@ export function formatPrice(amount: number, showDecimals = false): string {
 }
 
 /**
- * Calculates the total weight in grams for a given number of bundles.
- * 
- * @param bundles - Number of bundles
- * @returns Total weight in grams
+ * Total weight in grams for a given number of paid bundles (bonus excluded).
  */
 export function calculateTotalWeight(bundles: number): number {
-  const validBundles = Math.max(1, Math.floor(bundles));
-  return validBundles * BUNDLE_CONFIG.BUNDLE_WEIGHT_GRAMS;
+  return calculateBundlePricing(bundles).packetsPaid * BundlePricing.PACKET_WEIGHT_GRAMS;
 }
 
 /**
- * Returns pricing tier information for display.
- * 
- * @returns Array of pricing tiers
+ * Returns the exact offer tiers for display.
  */
 export function getPricingTiers() {
-  return [
-    { bundles: 1, price: 384, pricePerBundle: 384, savings: 0 },
-    { bundles: 2, price: 640, pricePerBundle: 320, savings: 128 },
-    { bundles: 3, price: 896, pricePerBundle: 299, savings: 256 },
-    { bundles: 4, price: 1152, pricePerBundle: 288, savings: 384 },
-  ];
+  return [1, 2, 3, 4].map((bundles) => {
+    const pricing = calculateBundlePricing(bundles);
+    return {
+      bundles,
+      bonusPackets: pricing.bonusPackets,
+      regularPrice: pricing.regularPrice,
+      discount: pricing.discount,
+      price: pricing.lineTotal,
+      pricePerBundle: pricing.unitPrice,
+      savings: pricing.discount,
+    };
+  });
 }

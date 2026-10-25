@@ -15,6 +15,7 @@ import {
   getCartItemKey, MAX_BUNDLES_PER_ITEM,
 } from "@/src/frontend/redux/slices/cartSlice";
 import { flavorLabel } from "@/src/frontend/lib/comboFlavors";
+import { calculateOrderBundlePricing } from "@/src/frontend/lib/pricing";
 import { addToWishlist } from "@/src/frontend/redux/slices/wishlistSlice";
 import styles from "./CartPage.module.css";
 
@@ -36,20 +37,24 @@ export default function CartPage() {
     setMounted(true);
   }, []);
 
-  const totalBundles = cartItems.reduce((sum, i) => sum + i.qty, 0);
+  // The offer is determined ONCE from the total bundle count across the whole
+  // cart (never per flavour) using the same source of truth as the backend.
+  const orderPricing = calculateOrderBundlePricing(cartItems.map((i) => i.qty));
+  const {
+    totalBundles,
+    regularPrice,
+    discount: bundleDiscount,
+    subtotal,
+    bonusPackets,
+  } = orderPricing;
 
-  // Apply tiered pricing formula: total = 384 + (N - 1) × 256
-  // This matches the server-side calculation in bundle-pricing.constants.ts
-  const tieredSubtotal = totalBundles > 0 ? 384 + (totalBundles - 1) * 256 : 0;
-
-  const subtotal = tieredSubtotal;
   // Effective price per bundle at the current tier (same for every flavour)
-  const perBundle = totalBundles > 0 ? subtotal / totalBundles : 0;
-  const discount = promoApplied ? subtotal * 0.1 : 0;
+  const perBundle = orderPricing.unitPrice;
+  const couponDiscount = promoApplied ? subtotal * 0.1 : 0;
   const shipping = 0; // FREE DELIVERY — always ₹0
   // GST is deactivated: no separate tax line is added. Price shown already
   // includes GST rather than adding it on top — see bundle-pricing.constants.ts.
-  const total = subtotal - discount + shipping;
+  const total = subtotal - couponDiscount + shipping;
   const progress = 100; // Always free shipping
   const remaining = 0;
 
@@ -282,8 +287,23 @@ export default function CartPage() {
 
               {/* Breakdown */}
               <div className={styles.breakdown}>
-                <div className={styles.bRow}><span>Subtotal</span><span>₹{subtotal.toFixed(2)}</span></div>
-                {promoApplied && <div className={`${styles.bRow} ${styles.bDiscount}`}><span>Discount</span><span>−₹{discount.toFixed(2)}</span></div>}
+                <div className={styles.bRow}>
+                  <span>{totalBundles} {totalBundles === 1 ? "Bundle" : "Bundles"} × ₹384</span>
+                  <span>₹{regularPrice.toFixed(2)}</span>
+                </div>
+                {bonusPackets > 0 && (
+                  <div className={styles.bRow}>
+                    <span>Bonus packets</span>
+                    <span>{bonusPackets} FREE</span>
+                  </div>
+                )}
+                {bundleDiscount > 0 && (
+                  <div className={`${styles.bRow} ${styles.bDiscount}`}>
+                    <span>Bundle discount</span>
+                    <span>−₹{bundleDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {promoApplied && <div className={`${styles.bRow} ${styles.bDiscount}`}><span>Coupon discount</span><span>−₹{couponDiscount.toFixed(2)}</span></div>}
                 <div className={styles.bRow}><span>Shipping</span><span className={shipping === 0 ? styles.free : ""}>{shipping === 0 ? "FREE" : `₹${shipping}`}</span></div>
               </div>
 

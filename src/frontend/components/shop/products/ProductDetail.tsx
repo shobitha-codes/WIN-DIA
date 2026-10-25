@@ -15,6 +15,7 @@ import {
 import { supabase } from "@/src/frontend/lib/supabase/client";
 
 import { ProductCard } from "./ProductCard";
+import { Breadcrumbs } from "@/src/frontend/components/Seo/Breadcrumbs";
 import {
   findProductByRouteId,
   getRecommendations,
@@ -348,11 +349,24 @@ function ProductDetailContent({
      Page
   ----------------------------- */
 
+  const isAssorted = product.flavour.toLowerCase() === "assorted";
+  const displayName = isAssorted
+    ? product.name
+    : `${product.flavour} FibreRich Thins`;
+
   return (
     <section
       className={styles.section}
       data-navbar-theme={theme}
     >
+      <Breadcrumbs
+        items={[
+          { name: "Home", href: "/" },
+          { name: "Shop", href: "/shop" },
+          { name: displayName },
+        ]}
+      />
+
       <div className={styles.detail}>
 
         {/* =========================
@@ -450,7 +464,7 @@ function ProductDetailContent({
           {/* Product name */}
 
           <h1 className={styles.infoName}>
-            {product.name}
+            {displayName}
           </h1>
 
           {/* Description */}
@@ -488,6 +502,18 @@ function ProductDetailContent({
               {product.delivery}
             </p>
           )}
+
+          {/* Contextual links */}
+
+          <p className={styles.contextLinks}>
+            <Link href="/health-benefits">
+              See the GI value and nutrition behind these thins
+            </Link>
+            <span aria-hidden="true"> · </span>
+            <Link href="/shop">
+              Explore all FibreRich Thins flavours
+            </Link>
+          </p>
 
           {/* Quantity controls */}
 

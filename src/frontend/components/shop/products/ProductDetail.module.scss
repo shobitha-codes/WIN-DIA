@@ -322,6 +322,22 @@
   font-weight: 500;
 }
 
+.contextLinks {
+  margin: 0.9rem 0 0;
+
+  font-size: 0.9rem;
+
+  line-height: 1.6;
+}
+
+.contextLinks a {
+  color: inherit;
+
+  text-decoration: underline;
+
+  text-underline-offset: 3px;
+}
+
 /* =========================================
    QUANTITY
 ========================================= */

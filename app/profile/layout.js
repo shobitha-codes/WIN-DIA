@@ -4,6 +4,11 @@ import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import ProfileSidebar from '@/src/frontend/components/profile/ProfileSidebar';
 import './profile.css';
 
+export const metadata = {
+  title: 'My Account',
+  robots: { index: false, follow: true },
+};
+
 export default async function ProfileLayout({ children }) {
   const supabase = await createSupabaseServerClient();
   const supabaseAdmin = createSupabaseAdminClient();

@@ -31,11 +31,11 @@ INSERT INTO products (
     'jeera-thins',
     'Jeera',
     (SELECT id FROM categories WHERE slug = 'gluten-free'),
-    640, -- TEMPORARY TEST PRICE
+    384, -- 6-packet bundle price
     NULL,
     'A crisp, fibre-rich snack with the mellow sweetness of roasted onion.',
     true, true, 100,
-    true, true, true, '200g', '/images/products/gluten-free/jeera.png',
+    true, true, true, '240g', '/images/products/gluten-free/jeera.png',
     now(), now()
   ),
   (
@@ -43,11 +43,11 @@ INSERT INTO products (
     'methi-thins',
     'Methi',
     (SELECT id FROM categories WHERE slug = 'gluten-free'),
-    640, -- TEMPORARY TEST PRICE
+    384, -- 6-packet bundle price
     NULL,
     'A bold, savoury crunch layered with warm roasted garlic notes.',
     true, true, 100,
-    true, true, true, '200g', '/images/products/gluten-free/methi.png',
+    true, true, true, '240g', '/images/products/gluten-free/methi.png',
     now(), now()
   ),
   (
@@ -55,11 +55,11 @@ INSERT INTO products (
     'moringa-thins',
     'Moringa',
     (SELECT id FROM categories WHERE slug = 'gluten-free'),
-    640, -- TEMPORARY TEST PRICE
+    384, -- 6-packet bundle price
     NULL,
     'A fragrant, savoury bite finished with aromatic curry leaf.',
     true, true, 100,
-    true, true, true, '200g', '/images/products/gluten-free/moringa.png',
+    true, true, true, '240g', '/images/products/gluten-free/moringa.png',
     now(), now()
   ),
   (
@@ -67,11 +67,11 @@ INSERT INTO products (
     'onion-thins',
     'Onion',
     (SELECT id FROM categories WHERE slug = 'traditional'),
-    640, -- TEMPORARY TEST PRICE
+    384, -- 6-packet bundle price
     NULL,
     'A satisfying daily crunch with naturally savoury onion flavour.',
     true, true, 100,
-    false, true, true, '200g', '/images/products/everyday/onion.png',
+    false, true, true, '240g', '/images/products/everyday/onion.png',
     now(), now()
   ),
   (
@@ -79,11 +79,11 @@ INSERT INTO products (
     'garlic-thins',
     'Garlic',
     (SELECT id FROM categories WHERE slug = 'traditional'),
-    640, -- TEMPORARY TEST PRICE
+    384, -- 6-packet bundle price
     NULL,
     'A comforting garlic-forward snack for everyday moments.',
     true, true, 100,
-    false, true, true, '200g', '/images/products/everyday/garlic.png',
+    false, true, true, '240g', '/images/products/everyday/garlic.png',
     now(), now()
   ),
   (
@@ -91,11 +91,11 @@ INSERT INTO products (
     'curry-leaf-thins',
     'Curry Leaf',
     (SELECT id FROM categories WHERE slug = 'traditional'),
-    640, -- TEMPORARY TEST PRICE
+    384, -- 6-packet bundle price
     NULL,
     'A light, flavourful crunch with a herbaceous curry leaf finish.',
     true, true, 100,
-    false, true, true, '200g', '/images/products/everyday/curryleaf.png',
+    false, true, true, '240g', '/images/products/everyday/curryleaf.png',
     now(), now()
   )
 ON CONFLICT (slug) DO NOTHING;

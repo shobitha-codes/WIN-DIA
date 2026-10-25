@@ -80,6 +80,9 @@ function HeroSection() {
             <span className="win-hb-badge">GI certified</span>
           </div>
           <div className="win-hb-hero-actions">
+            <Link href="/shop" className="win-hb-hero-btn">
+              Shop FibreRich Thins →
+            </Link>
             <Link href="/Recipes" className="win-hb-hero-btn">
               Explore Recipes →
             </Link>

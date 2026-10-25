@@ -1,7 +1,20 @@
+import type { Metadata } from "next";
+
 import { Hero } from "@/src/frontend/components/shop/Hero/Hero";
 import { GlutenFree } from "@/src/frontend/components/shop/products/GlutenFree";
 import { ComboOffer } from "@/src/frontend/components/shop/products/ComboOffer";
+import { JsonLd } from "@/src/frontend/components/Seo/JsonLd";
+import { breadcrumbJsonLd } from "@/src/frontend/components/Seo/Breadcrumbs";
 import type { Product } from "@/src/frontend/components/shop/products/productShared";
+import { BundlePricing } from "@/src/frontend/lib/pricing";
+import { pageMetadata } from "@/src/frontend/lib/seo";
+
+export const metadata: Metadata = pageMetadata({
+  title: "Shop Low-GI FibreRich Thins",
+  description:
+    "Shop WIN-DIA FibreRich Thins in Jeera, Garlic, Onion and Curry Leaves flavours, plus the assorted 6-packet combo. High-fibre, low-GI coconut flour snacks with free delivery across India.",
+  path: "/shop",
+});
 
 /**
  * Fetches all active products from the internal API.
@@ -53,16 +66,16 @@ async function fetchAllProducts(): Promise<Product[]> {
           productId = slug.replace(/^(gluten-free|everyday|combo)-/, "") || flavor;
         }
         
-        // Parse net_weight from database (e.g., "480g" → 480)
+        // Parse net_weight from database (e.g., "240g" → 240)
         const parseNetWeight = (raw: unknown): number => {
           if (typeof raw === "string") {
             const parsed = parseInt(raw.replace(/[^0-9]/g, ""), 10);
-            return !isNaN(parsed) && parsed > 0 ? parsed : 480;
+            return !isNaN(parsed) && parsed > 0 ? parsed : BundlePricing.BUNDLE_WEIGHT_GRAMS;
           }
           if (typeof raw === "number") {
-            return raw > 0 ? raw : 480;
+            return raw > 0 ? raw : BundlePricing.BUNDLE_WEIGHT_GRAMS;
           }
-          return 480; // Default: 12 × 40g = 480g
+          return BundlePricing.BUNDLE_WEIGHT_GRAMS;
         };
 
         return {
@@ -73,9 +86,9 @@ async function fetchAllProducts(): Promise<Product[]> {
           flavour: String(p.flavor ?? ""),
           image: String(p.image ?? p.image_url ?? ""),
           description: String(p.description ?? ""),
-          price: `₹${Number(p.price ?? 640)}`,
-          offer: "12 × 40g Bundle",
-          offerDetails: "🎁 Pay for 10 + Get 2 FREE",
+          price: `₹${Number(p.price ?? BundlePricing.BUNDLE_PRICE)}`,
+          offer: `${BundlePricing.PACKETS_PER_BUNDLE} × ${BundlePricing.PACKET_WEIGHT_GRAMS}g Bundle`,
+          offerDetails: "",
           delivery: "🚚 Free Delivery",
           netWeight: parseNetWeight(p.net_weight),
         };
@@ -90,6 +103,12 @@ export default async function ShopPage() {
 
   return (
     <main>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", href: "/" },
+          { name: "Shop FibreRich Thins", href: "/shop" },
+        ])}
+      />
       <Hero />
       <ComboOffer />
       <GlutenFree products={products.length ? products : undefined} />

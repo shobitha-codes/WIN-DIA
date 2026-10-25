@@ -77,7 +77,7 @@ export default function Footer() {
             <ul className="footer-links">
               <li>
                 <Link href="/shop">
-                  Shop
+                  Shop FibreRich Thins
                 </Link>
               </li>
 
@@ -94,14 +94,61 @@ export default function Footer() {
               </li>
 
               <li>
+                <Link href="/Recipes">
+                  Thins Recipes
+                </Link>
+              </li>
+
+              <li>
                 <Link href="/our-story/contact">
-                  Contact
+                  Contact Us
                 </Link>
               </li>
 
               <li>
                 <Link href="/profile/orders">
-                  Track Order
+                  Track Your Order
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Shop Flavours */}
+          <div className="footer-col">
+            <h4 className="footer-col-title">
+              Shop Flavours
+            </h4>
+
+            <div className="footer-col-rule" />
+
+            <ul className="footer-links">
+              <li>
+                <Link href="/product/everyday-jeera">
+                  Jeera FibreRich Thins
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/product/everyday-garlic">
+                  Garlic FibreRich Thins
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/product/everyday-onion">
+                  Onion FibreRich Thins
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/product/everyday-curry-leaf">
+                  Curry Leaves FibreRich Thins
+                </Link>
+              </li>
+
+              <li>
+                <Link href="/shop">
+                  Assorted Combo Bundle
                 </Link>
               </li>
             </ul>

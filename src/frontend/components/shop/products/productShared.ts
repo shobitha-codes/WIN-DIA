@@ -1,5 +1,7 @@
 import type { StaticImageData } from "next/image";
 
+import { BundlePricing } from "@/src/frontend/lib/pricing";
+
 /**
  * The shape of a single product.
  *
@@ -28,7 +30,7 @@ export type Product = {
   readonly rating?: string;
   readonly reviews?: string;
   readonly reviewList?: readonly string[];
-  readonly netWeight?: number | string; // Weight in grams (e.g., 480 or "480g")
+  readonly netWeight?: number | string; // Weight in grams (e.g., 240 or "240g")
 };
 
 /**
@@ -109,7 +111,7 @@ export function toStoreProduct(
     flavor: product.flavour,
     description: product.description,
 
-    // Convert "₹640" → 640
+    // Convert "₹384" → 384
     price: Number(
       product.price.replace(/[^0-9.]/g, "")
     ),
@@ -119,12 +121,12 @@ export function toStoreProduct(
     countInStock: 100,
     
     // Use actual product weight (numeric grams)
-    // For WIN-DIA bundles: 12 packets × 40g = 480g per bundle
+    // For WIN-DIA bundles: 6 packets × 40g = 240g per bundle
     netWeight: typeof product.netWeight === "number" 
       ? product.netWeight 
       : (typeof product.netWeight === "string" 
-          ? parseInt(product.netWeight.replace(/[^0-9]/g, ""), 10) || 480
-          : 480),
+          ? parseInt(product.netWeight.replace(/[^0-9]/g, ""), 10) || BundlePricing.BUNDLE_WEIGHT_GRAMS
+          : BundlePricing.BUNDLE_WEIGHT_GRAMS),
   };
 
   // Preserve the real database UUID if available (from API products)
