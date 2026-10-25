@@ -19,6 +19,11 @@ export class SettingsServiceImpl implements SettingsService {
   }
 
   public async getSettingByKey(key: string): Promise<Result<Setting, AppError>> {
+    // Private keys must never be readable through the public route
+    if (key.startsWith('secret_') || key.startsWith('private_')) {
+      return failure(new NotFoundError(`Setting key "${key}" not found`));
+    }
+
     const res = await this.settingsRepo.findByKey(key);
     if (!res.success) return res;
     if (!res.value) {

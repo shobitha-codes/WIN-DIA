@@ -155,7 +155,7 @@ export class RequestScopedContainer {
       case RepositoryTokens.ContactMessageRepository:
         return new SupabaseContactMessageRepository(this.client) as any;
       case RepositoryTokens.SettingsRepository:
-        return new SupabaseSettingsRepository(this.client) as any;
+        return new SupabaseSettingsRepository(getAdminClient()) as any;
       case RepositoryTokens.PageContentRepository:
         return new SupabasePageContentRepository(this.client) as any;
       case RepositoryTokens.BannerRepository:
