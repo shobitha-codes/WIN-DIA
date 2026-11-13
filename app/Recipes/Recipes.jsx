@@ -692,26 +692,26 @@ function RecipeVideoSection() {
           {/* Recipe Video 1 */}
           <div className="win-rc-video-card">
             <video
-              className="win-rc-recipe-video"
-              autoPlay
-              muted
-              loop
-              playsInline
-              controls
-            >
-              <source src="/video/recipe1.mp4" type="video/mp4" />
-            </video>
+  className="win-rc-recipe-video"
+  muted
+  loop
+  playsInline
+  controls
+  preload="metadata"
+>
+  <source src="/video/recipe1.mp4" type="video/mp4" />
+</video>
           </div>
 
           {/* Recipe Video 2 */}
           <div className="win-rc-video-card">
             <video
               className="win-rc-recipe-video"
-              autoPlay
               muted
               loop
               playsInline
               controls
+              preload="metadata"
             >
               <source src="/video/recipe2.mp4" type="video/mp4" />
             </video>
