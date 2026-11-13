@@ -87,10 +87,10 @@ const SLIDES = [
     announceMsg: 'Free delivery on orders above ₹299 · 100% Natural · FSSAI Certified',
     heroBg: '#1a0f05',
   },
-  { type: 'flavour', flavour: 'Jeera',  bgVideo: '/video/jeera-bg.mp4',  bg: '#6F4A2D', accent: '#f5deb3', textColor: '#fff8f0', tagline: 'Earthy & Warm',   headline: 'Jeera\nFlavour Thins',  sub: 'The classic Indian spice — bold, aromatic and guilt-free.', badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#d4873a' },
-  { type: 'flavour', flavour: 'Garlic', bgVideo: '/video/garlic-bg.mp4', bg: '#E1ACAC', accent: '#f4c89a', textColor: '#fff5f0', tagline: 'Bold & Punchy',   headline: 'Garlic\nFlavour Thins', sub: 'Intense roasted garlic in every crisp, wholesome bite.',   badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#a03535' },
-  { type: 'flavour', flavour: 'Onion',  bgVideo: '/video/onion-bg.mp4',  bg: '#A888B5', accent: '#f0c4f0', textColor: '#fff0ff', tagline: 'Sweet & Savoury', headline: 'Onion\nFlavour Thins',  sub: 'Caramelised onion warmth baked into every thin crisp.',    badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#8c4f8c' },
-  { type: 'flavour', flavour: 'Curry',  bgVideo: '/video/curry-bg.mp4',  bg: '#468432', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'Distinctly Desi', headline: 'Curry\nFlavour Thins',  sub: 'Aromatic curry flavour in every crunchy bite.',            badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25' },
+  { type: 'flavour', flavour: 'Jeera',  bgVideo: '/video/jeera-bg.mp4', poster: '/images/hero/jeera-bg-poster.jpg',  bg: '#6F4A2D', accent: '#f5deb3', textColor: '#fff8f0', tagline: 'Earthy & Warm',   headline: 'Jeera\nFlavour Thins',  sub: 'The classic Indian spice — bold, aromatic and guilt-free.', badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#d4873a' },
+  { type: 'flavour', flavour: 'Garlic', bgVideo: '/video/garlic-bg.mp4', poster: '/images/hero/garlic-bg-poster.jpg', bg: '#E1ACAC', accent: '#f4c89a', textColor: '#fff5f0', tagline: 'Bold & Punchy',   headline: 'Garlic\nFlavour Thins', sub: 'Intense roasted garlic in every crisp, wholesome bite.',   badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#a03535' },
+  { type: 'flavour', flavour: 'Onion',  bgVideo: '/video/onion-bg.mp4', poster: '/images/hero/onion-bg-poster.jpg',  bg: '#A888B5', accent: '#f0c4f0', textColor: '#fff0ff', tagline: 'Sweet & Savoury', headline: 'Onion\nFlavour Thins',  sub: 'Caramelised onion warmth baked into every thin crisp.',    badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#8c4f8c' },
+  { type: 'flavour', flavour: 'Curry',  bgVideo: '/video/curry-bg.mp4', poster: '/images/hero/curry-bg-poster.jpg',  bg: '#468432', accent: '#d4e89a', textColor: '#f5fff0', tagline: 'Distinctly Desi', headline: 'Curry\nFlavour Thins',  sub: 'Aromatic curry flavour in every crunchy bite.',            badge: 'High Fibre · 0% Maida · Low GI', imgPlaceholderColor: '#637d25' },
 ]
 
 const DURATION = 5000
@@ -123,9 +123,9 @@ function FlavourVideoLayer({ current, paused }) {
     else v.play().catch(() => {})
   }, [paused])
 
-  return (
+    return (
     <div className="hero-flavour-layer">
-      {flavours.map(({ index, bgVideo }) => (
+      {flavours.map(({ index, bgVideo, poster }) => (
         <video
           key={bgVideo}
           ref={el => (refs.current[index] = el)}
@@ -133,7 +133,8 @@ function FlavourVideoLayer({ current, paused }) {
           muted
           loop
           playsInline
-          preload="auto"
+          poster={poster}
+          preload={index === current || index === (current + 1) % SLIDES.length ? 'auto' : 'metadata'}
         >
           <source src={bgVideo} type="video/mp4" />
         </video>
@@ -244,12 +245,14 @@ useEffect(() => {
         {slide.type === 'video' ? (
           /* ── VIDEO SLIDE ── */
           <div className="hero-video-slide">
-            <video
+                        <video
               className="hero-video-bg"
               autoPlay
               muted
               loop={false}
               playsInline
+              preload="auto"
+              poster="/images/hero/hero_vdo-poster.jpg"
               ref={videoRef}
               onEnded={handleVideoEnd}
             >
