@@ -79,7 +79,9 @@ export default function TrackOrderPage() {
     if (isCOD && result.orderStatus === "delivered" && result.paymentStatus === "cod_collected") display = "payment_collected";
 
     const baseIdx = steps.indexOf(display);
-    const dtdcKey = !isCOD && result.step === "confirmed" ? "paid" : result.step;
+    const dtdcKey = !isCOD && result.step === "confirmed"
+  ? (result.paymentStatus === "paid" ? "paid" : "placed")
+  : result.step;
     const dtdcIdx = result.step ? steps.indexOf(dtdcKey) : -1;
     statusIdx = Math.max(baseIdx, dtdcIdx, 0);
   }
