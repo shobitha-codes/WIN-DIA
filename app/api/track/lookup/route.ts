@@ -81,8 +81,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ ...base, awb: null, step: null, label: 'Order cancelled', issue: false, events: [] });
   }
 
-  if (!order.awb_code) {
-    return NextResponse.json({ ...base, awb: null, step: 'confirmed', label: 'Order confirmed', issue: false, events: [] });
+    if (!order.awb_code) {
+    const unpaidOnline = order.payment_method !== 'cod' && order.payment_status !== 'paid';
+    return NextResponse.json({
+      ...base,
+      awb: null,
+      step: unpaidOnline ? 'placed' : 'confirmed',
+      label: unpaidOnline ? 'Payment not completed' : 'Order confirmed',
+      issue: false,
+      events: [],
+    });
   }
 
   try {
