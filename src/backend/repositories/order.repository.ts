@@ -104,6 +104,8 @@ export class SupabaseOrderRepository
 
   /**
    * Inserts the order_items rows for a given order.
+   * Extra properties on a prepared item (such as `combo_selections`) are not
+   * columns of order_items, so they are deliberately left out of the payload.
    */
   private async insertOrderItems(
     client: SupabaseClient,
@@ -122,6 +124,47 @@ export class SupabaseOrderRepository
     }));
 
     return client.from('order_items').insert(itemsPayload).select('*');
+  }
+
+  /**
+   * Builds the order_combo_selections rows for the inserted order items.
+   *
+   * One combo = one bundle = 6 packets. An item with qty N is N combos, and
+   * the stock functions expect one full set of selection rows per combo
+   * (combo_number 1..N). Every combo on a line has the same selection.
+   *
+   * Inserted rows are matched to the prepared items by position (insert order),
+   * and the product_id is checked as a safety net. Returns null when the
+   * inserted rows do not line up with the prepared items.
+   */
+  private buildComboSelectionRows(
+    insertedItems: Record<string, unknown>[],
+    preparedItems: Record<string, unknown>[]
+  ): Record<string, unknown>[] | null {
+    if (insertedItems.length !== preparedItems.length) return null;
+
+    const rows: Record<string, unknown>[] = [];
+    for (let idx = 0; idx < insertedItems.length; idx++) {
+      const inserted = insertedItems[idx];
+      const prepared = preparedItems[idx];
+      if (String(inserted.product_id) !== String(prepared.product_id)) return null;
+
+      const selections = prepared.combo_selections as Record<string, number> | null | undefined;
+      if (!selections) continue;
+
+      const comboCount = Math.max(1, Number(inserted.qty) || 1);
+      for (let comboNumber = 1; comboNumber <= comboCount; comboNumber++) {
+        for (const [flavor, packets] of Object.entries(selections)) {
+          rows.push({
+            order_item_id: inserted.id,
+            combo_number: comboNumber,
+            flavor,
+            bundle_quantity: Number(packets),
+          });
+        }
+      }
+    }
+    return rows;
   }
 
   /**
@@ -172,6 +215,8 @@ export class SupabaseOrderRepository
 
   /**
    * Deletes any rows already created for this checkout attempt, in dependency order.
+   * order_combo_selections rows are removed automatically with their order_items
+   * (ON DELETE CASCADE).
    */
   private async rollbackCheckout(
     client: SupabaseClient,
@@ -207,6 +252,28 @@ export class SupabaseOrderRepository
       if (itemsError) {
         await this.rollbackCheckout(client, order.id);
         return failure(this.handleError(itemsError, 'createCheckoutTransaction'));
+      }
+
+      // Save the structured combo flavour choices. The stock functions read
+      // these rows (per flavour) to deduct stock, so an order whose rows could
+      // not be saved is rolled back instead of being left unfulfillable.
+      const comboRows = this.buildComboSelectionRows(
+        (items || []) as Record<string, unknown>[],
+        orderItems
+      );
+      if (comboRows === null) {
+        await this.rollbackCheckout(client, order.id);
+        return failure(this.handleError(
+          new Error('Inserted order items did not match the prepared items'),
+          'createCheckoutTransaction'
+        ));
+      }
+      if (comboRows.length > 0) {
+        const { error: comboError } = await client.from('order_combo_selections').insert(comboRows);
+        if (comboError) {
+          await this.rollbackCheckout(client, order.id);
+          return failure(this.handleError(comboError, 'createCheckoutTransaction'));
+        }
       }
 
       const { data: shipment, error: shipmentError } = await this.insertShipment(client, order.id, shipmentData);

@@ -50,7 +50,11 @@ interface PreparedOrderItems {
   regularSubtotal: number;
   /** Order-wide bundle discount (₹0, ₹128, ₹192 or ₹256 for 1–4 bundles) */
   bundleDiscount: number;
-  /** Order-wide free bonus packets (0, 2, 3 or 4 for 1–4 bundles) */
+  /**
+   * Offer wording only (0, 2, 3 or 4 for 1–4 bundles): the discount is
+   * described as "free packets". The customer still receives exactly 6 packets
+   * per bundle, so this is NOT extra stock or extra weight.
+   */
   bonusPackets: number;
   totalBundles: number;
 }
@@ -67,6 +71,25 @@ interface OrderCreationOutcome {
 }
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * The four products that hold the real flavour stock (in packets), keyed by
+ * slug. Combos have no stock of their own: they draw from these four.
+ * Keep in sync with the database stock functions.
+ */
+const FLAVOUR_PRODUCTS: Record<string, string> = {
+  'curry-leaves-thins': 'Curry Leaves',
+  'garlic-thins': 'Garlic',
+  'jeera-thins': 'Jeera',
+  'onion-thins': 'Onion',
+};
+
+/** The minimum shape the per-flavour stock check needs from an order line. */
+interface FlavourStockLine {
+  productSlug: string;
+  bundles: number;
+  comboSelections: Record<string, number> | null;
+}
 
 export class CheckoutServiceImpl implements CheckoutService {
   private userService: UserService;
@@ -253,11 +276,14 @@ export class CheckoutServiceImpl implements CheckoutService {
     interface LineDraft {
       productId: string;
       productName: string;
+      productSlug: string;
       bundles: number;
       displayName: string;
       image: string | null;
       weightPerBundle: number;
       flavor: string | null;
+      /** Validated flavour choices for ONE combo (canonical labels), or null for non-combo lines */
+      comboSelections: Record<string, number> | null;
     }
     const drafts: LineDraft[] = [];
     const productsById = new Map<string, { name: string; stock: number }>();
@@ -305,14 +331,21 @@ export class CheckoutServiceImpl implements CheckoutService {
         ));
       }
 
-      // Combo lines: validate the chosen flavours and record them on the order item
+      // Combo lines: validate the chosen flavours, record a readable summary on
+      // the order item, and keep the structured selections so they can be saved
+      // to order_combo_selections (needed for per-flavour stock deduction).
       let flavor: string | null = item.flavor || null;
+      let comboSelections: Record<string, number> | null = null;
       if (item.flavorSelections) {
         const combo = parseComboSelections(item.flavorSelections);
         if (!combo.ok) {
           return failure(new ValidationError(`${item.name || 'Combo'}: ${combo.reason}`));
         }
+        if (catalogProduct.is_active === false) {
+          return failure(new ValidationError(`${item.name || 'Combo'} is currently unavailable.`));
+        }
         flavor = combo.summary ?? null;
+        comboSelections = combo.selections ?? null;
       }
 
       productsById.set(validProductId, {
@@ -322,50 +355,56 @@ export class CheckoutServiceImpl implements CheckoutService {
       drafts.push({
         productId: validProductId,
         productName: item.name || catalogProduct.name || 'product',
+        productSlug: String(catalogProduct.slug || ''),
         bundles,
         displayName: item.name || item.product_name || 'WIN-DIA Product',
         image: item.image || item.image_url || null,
         weightPerBundle,
         flavor,
+        comboSelections,
       });
     }
 
     // SERVER-SIDE PRICE ENFORCEMENT: Never trust frontend-sent price.
     // The exact offer is determined ONCE from the total bundle count across the
-    // whole order, so bonus packets and discounts are never recalculated
-    // per flavour. Quantities above four preserve the legacy behaviour.
+    // whole order, so the discount is never recalculated per flavour.
+    // Quantities above four preserve the legacy behaviour.
     const orderPricing = calculateOrderBundlePricing(drafts.map((d) => d.bundles));
     const subtotal = orderPricing.subtotal;
 
-    // Bonus packets are granted order-wide (one per bundle for 2–4 bundles).
-    // Distribute them proportionally when validating stock and booking weight,
-    // without changing the paid bundle quantity or creating paid line items.
-    const bonusPerBundle = orderPricing.totalBundles > 0
-      ? orderPricing.bonusPackets / orderPricing.totalBundles
-      : 0;
-
-    // Stock validation: check against packets to be SHIPPED, summed per product.
+    // Stock validation, in packets, summed per product. The customer receives
+    // exactly 6 packets per bundle: the offer's "bonus packets" are only how
+    // the discount is worded (e.g. 2 bundles = pay for 10 packets, receive 12),
+    // so nothing extra is shipped or deducted.
     // Several lines can point at the same product (e.g. combos with different
     // flavour selections), so each line passing alone is not enough.
+    // Combo lines are skipped here: a combo is only a container whose packets
+    // come from the four flavour products, so they are checked per flavour by
+    // validateFlavourStock below (the database re-checks at deduction time).
     const packetsByProduct = new Map<string, number>();
     for (const d of drafts) {
-      const packets = d.bundles * (BundlePricing.PACKETS_SHIPPED_PER_BUNDLE + bonusPerBundle);
+      if (d.comboSelections) continue;
+      const packets = d.bundles * BundlePricing.PACKETS_SHIPPED_PER_BUNDLE;
       packetsByProduct.set(d.productId, (packetsByProduct.get(d.productId) || 0) + packets);
     }
     for (const [productId, packetsNeeded] of packetsByProduct) {
-      console.log(`[TRACE STEP 4: STOCK_VALIDATION] Calling InventoryService.validateStock for productId: ${productId}, packetsShipped: ${packetsNeeded}`);
+      console.log(`[TRACE STEP 4: STOCK_VALIDATION] Calling InventoryService.validateStock for productId: ${productId}, packets: ${packetsNeeded}`);
       const stockRes = await this.inventoryService.validateStock(productId, packetsNeeded);
       if (!stockRes.success) {
         const info = productsById.get(productId);
         console.log(`[TRACE STEP 4: STOCK_VALIDATION] Insufficient stock for productId=${productId}:`, stockRes.error);
-        const packetsPerBundleWithBonus = BundlePricing.PACKETS_SHIPPED_PER_BUNDLE + bonusPerBundle;
-        const bundlesNeeded = Math.round(packetsNeeded / packetsPerBundleWithBonus);
+        const bundlesNeeded = Math.round(packetsNeeded / BundlePricing.PACKETS_SHIPPED_PER_BUNDLE);
         return failure(new ValidationError(
-          `Insufficient stock for "${info?.name || 'product'}". You ordered ${bundlesNeeded} bundle(s) (${packetsNeeded} packets` +
-          `${bonusPerBundle > 0 ? ' including free bonus packets' : ''}) but only ${info?.stock ?? 0} packet(s) are in stock.`
+          `Insufficient stock for "${info?.name || 'product'}". You ordered ${bundlesNeeded} bundle(s) (${packetsNeeded} packets) ` +
+          `but only ${info?.stock ?? 0} packet(s) are in stock.`
         ));
       }
     }
+
+    // Combos and plain flavour bundles all draw from the same four flavour
+    // products, so check them together BEFORE the customer is sent to pay.
+    const flavourCheck = await this.validateFlavourStock(drafts);
+    if (!flavourCheck.success) return failure(flavourCheck.error);
 
     const preparedOrderItems: Record<string, unknown>[] = drafts.map((d) => ({
       product_id: d.productId,
@@ -374,13 +413,17 @@ export class CheckoutServiceImpl implements CheckoutService {
       // discount is recorded separately on the order (never folded into or
       // trusted from a client-submitted price).
       price: BundlePricing.BUNDLE_PRICE,
-      // qty = number of PAID bundles ordered (bonus packets are not paid items)
+      // qty = number of bundles ordered (one combo = one bundle = 6 packets)
       qty: d.bundles,
       flavor: d.flavor,
+      // Structured flavour choices for ONE combo (null for non-combo lines).
+      // Not an order_items column: the repository saves it to
+      // order_combo_selections, once per combo.
+      combo_selections: d.comboSelections,
       // CRITICAL: Store weight PER BUNDLE (not total line weight).
-      // DTDC multiplies this by qty, so include the free bonus packets here.
-      // They are fulfilment extras, not extra paid line items.
-      net_weight_grams: d.weightPerBundle + (bonusPerBundle * BundlePricing.PACKET_WEIGHT_GRAMS),
+      // DTDC multiplies this by qty. The customer receives exactly 6 packets
+      // per bundle, so there is no extra weight for the offer's "bonus" wording.
+      net_weight_grams: d.weightPerBundle,
       image: d.image,
     }));
 
@@ -388,7 +431,7 @@ export class CheckoutServiceImpl implements CheckoutService {
     console.log(
       `[TRACE STEP 4: ORDER_PAYLOAD_CREATION] SUCCESS | Time: ${step4Time}ms | ` +
       `Regular: ${orderPricing.regularPrice} | Bundle discount: ${orderPricing.discount} | ` +
-      `Final subtotal: ${subtotal} | Bonus packets: ${orderPricing.bonusPackets}`,
+      `Final subtotal: ${subtotal} | Offer free-packet wording: ${orderPricing.bonusPackets}`,
       preparedOrderItems
     );
 
@@ -400,6 +443,82 @@ export class CheckoutServiceImpl implements CheckoutService {
       bonusPackets: orderPricing.bonusPackets,
       totalBundles: orderPricing.totalBundles,
     });
+  }
+
+  /**
+   * Checks the whole order against the four flavour products, using the same
+   * rules as the database stock functions so a customer is never sent to pay
+   * for something that cannot be fulfilled:
+   *  - a flavour is "available" only if it is active and has at least one
+   *    full bundle (6 packets) in stock;
+   *  - every combo must contain every available flavour (compulsory) and
+   *    nothing that is unavailable;
+   *  - the total packets needed per flavour (combos plus plain bundles) must
+   *    not exceed that flavour's stock.
+   */
+  private async validateFlavourStock(lines: FlavourStockLine[]): Promise<Result<boolean, AppError>> {
+    const required: Record<string, number> = {};
+    for (const line of lines) {
+      if (line.comboSelections) {
+        for (const [label, packets] of Object.entries(line.comboSelections)) {
+          required[label] = (required[label] || 0) + packets * line.bundles;
+        }
+      } else if (FLAVOUR_PRODUCTS[line.productSlug]) {
+        const label = FLAVOUR_PRODUCTS[line.productSlug];
+        required[label] = (required[label] || 0) + line.bundles * BundlePricing.PACKETS_SHIPPED_PER_BUNDLE;
+      }
+    }
+    if (Object.keys(required).length === 0) return success(true);
+
+    const stock: Record<string, { active: boolean; count: number }> = {};
+    for (const [slug, label] of Object.entries(FLAVOUR_PRODUCTS)) {
+      const res = await this.productRepo.findBySlug(slug);
+      if (!res.success || !res.value) {
+        console.error(`[CheckoutService] Flavour product "${slug}" not found while checking stock`);
+        return failure(new ValidationError('We could not check stock right now. Please try again in a moment.'));
+      }
+      stock[label] = {
+        active: res.value.is_active === true,
+        count: Number(res.value.count_in_stock) || 0,
+      };
+    }
+
+    const available = Object.keys(stock).filter(
+      (label) => stock[label].active && stock[label].count >= BundlePricing.PACKETS_PER_BUNDLE
+    );
+
+    for (const line of lines) {
+      if (!line.comboSelections) continue;
+      const chosen = Object.keys(line.comboSelections);
+
+      const unavailable = chosen.filter((label) => !available.includes(label));
+      if (unavailable.length > 0) {
+        return failure(new ValidationError(
+          `${unavailable.join(', ')} is currently out of stock. Please go back and choose your combo again.`
+        ));
+      }
+
+      const missing = available.filter((label) => !chosen.includes(label));
+      if (missing.length > 0) {
+        return failure(new ValidationError(
+          `Every available flavour must be in your combo. Please add: ${missing.join(', ')}.`
+        ));
+      }
+    }
+
+    for (const [label, packets] of Object.entries(required)) {
+      const s = stock[label];
+      if (!s.active) {
+        return failure(new ValidationError(`${label} is currently unavailable.`));
+      }
+      if (s.count < packets) {
+        return failure(new ValidationError(
+          `Insufficient stock for ${label}. Your order needs ${packets} packets but only ${s.count} are available.`
+        ));
+      }
+    }
+
+    return success(true);
   }
 
   /**
@@ -515,6 +634,19 @@ export class CheckoutServiceImpl implements CheckoutService {
     }
 
     console.log(`[TRACE STEP 7: RPC_INVOCATION] RPC FAILED | Time: ${step7Time}ms | Database Error:`, txRes.error);
+
+    // The fallback below cannot save combo flavour selections, and an order
+    // without them can never have its stock deducted (a Razorpay customer
+    // could even pay for an order that cannot be confirmed). So combo orders
+    // are never created through the fallback: report the failure instead.
+    if (preparedOrderItems.some((i) => i.combo_selections)) {
+      const comboErr: any = (txRes as any).error;
+      return failure(
+        comboErr ||
+        new ValidationError('We could not place your order right now. Please try again in a moment or contact support.')
+      );
+    }
+
     console.log(`[TRACE STEP 7: FALLBACK] Initiating standard repository order creation fallback`);
     return this.createOrderFallback(userId, dto, selectedAddress, preparedOrderItems, selectedPaymentMethod, pricing);
   }
@@ -523,6 +655,7 @@ export class CheckoutServiceImpl implements CheckoutService {
    * Fallback path used when the single-transaction RPC checkout fails:
    * creates the order, order items, Razorpay payment, and shipment placeholder
    * step by step via the individual services/repositories.
+   * (Not used for combo orders: see createOrder.)
    */
   private async createOrderFallback(
     userId: string | null,
@@ -670,7 +803,7 @@ export class CheckoutServiceImpl implements CheckoutService {
       const { shipping, tax, total } = orderPricing;
       console.log(
         `[TRACE STEP 6: PRICING_CALCULATION] Pricing (FREE DELIVERY enforced) | ` +
-        `Bundles: ${totalBundles} | Bonus packets: ${bonusPackets} | ` +
+        `Bundles: ${totalBundles} | Offer free-packet wording: ${bonusPackets} | ` +
         `Bundle discount: ${bundleDiscount} | Coupon discount: ${couponDiscount}:`,
         orderPricing
       );
@@ -695,6 +828,22 @@ export class CheckoutServiceImpl implements CheckoutService {
       );
       if (!orderCreationRes.success) return failure(orderCreationRes.error);
       const { createdOrder, createdPayment, createdShipment } = orderCreationRes.value;
+
+      // COD orders have no payment step, so take the stock off right now.
+      // This must run before the cart is cleared and before the DTDC booking.
+      if (selectedPaymentMethod === 'cod') {
+        const codStockRes = await this.inventoryService.deductStockForCodOrder(createdOrder.id);
+        if (!codStockRes.success) {
+          console.error(`[CheckoutService] COD stock deduction failed for order ${createdOrder.order_number}:`, codStockRes.error);
+          const reason = String(codStockRes.error?.message || '');
+          const isStockIssue = /insufficient stock|is unavailable|unavailable flavour/i.test(reason);
+          return failure(new ValidationError(
+            isStockIssue
+              ? 'Some items in your cart just went out of stock. Please review your cart and try again.'
+              : 'We could not place your order right now. Please try again in a moment or contact support.'
+          ));
+        }
+      }
 
       // STEP 9: CLEAR_CART & INCREMENT COUPON USAGE
       // Only finalize cart/coupon for authenticated users

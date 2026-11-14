@@ -17,6 +17,7 @@ export interface ConfirmPaymentAndDeductArgs {
 export interface InventoryService {
   validateStock(productId: string, requiredQuantity: number): Promise<Result<Product, AppError>>;
   confirmPaymentAndDeductStock(args: ConfirmPaymentAndDeductArgs): Promise<Result<Record<string, unknown>, AppError>>;
+  deductStockForCodOrder(orderId: string): Promise<Result<Record<string, unknown>, AppError>>;
   restoreStockAfterCancellation(productId: string, quantity: number): Promise<Result<Product, AppError>>;
 }
 
@@ -81,6 +82,32 @@ export class InventoryServiceImpl implements InventoryService {
     }
 
     return success((data ?? {}) as Record<string, unknown>);
+  }
+
+    /**
+   * Cash-on-delivery orders: takes stock off when the order is placed.
+   * Calls the COD-only database function. It refuses non-COD orders and is
+   * safe to call twice for the same order.
+   */
+  public async deductStockForCodOrder(orderId: string): Promise<Result<Record<string, unknown>, AppError>> {
+    const { getAdminClient } = require('../config/supabase.config');
+    const client = getAdminClient();
+
+    const { data, error } = await client.rpc('deduct_windia_cod_order_stock', {
+      p_order_id: orderId,
+    });
+
+    if (error) {
+      logger.error(`[InventoryService] deduct_windia_cod_order_stock failed for order ${orderId}: ${error.message}`);
+      return failure(new InventoryError(`COD stock deduction failed: ${error.message}`));
+    }
+
+    if (data !== true) {
+      logger.error(`[InventoryService] COD stock deduction returned an unexpected result for order ${orderId}`);
+      return failure(new InventoryError('COD stock deduction did not complete'));
+    }
+
+    return success({ orderId, deducted: true });
   }
 
   /**
