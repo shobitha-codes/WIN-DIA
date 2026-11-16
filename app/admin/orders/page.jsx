@@ -6,16 +6,13 @@ import { useAuth } from "@/src/frontend/hooks/useAuth";
 import styles from "../admin.module.css";
 import * as XLSX from "xlsx";
 
+// DTDC Tracking Statuses - Only show statuses that DTDC provides
 const STATUSES = [
-  "placed",
-  "confirmed",
-  "shipped",
-  "out_for_delivery",
-  "delivered",
-  "payment_collected",
-  "cancelled",
-  "rto_initiated",
-  "rto_delivered",
+  "placed",           // Initial order placement
+  "shipped",          // Softdata uploaded, pickup scheduled, or in transit
+  "out_for_delivery", // Out for delivery
+  "delivered",        // Delivered to customer
+  "cancelled",        // Order cancelled
 ];
 
 // Date filter options for sales reports
@@ -399,18 +396,24 @@ function generateShippingLabel(order) {
 // ─── Components ─────────────────────────────────────────────────────────────
 
 function StatusBadge({ status }) {
+  // Map DTDC statuses to display colors
   const colorMap = {
-    placed: "#f59e0b",
-    confirmed: "#3b82f6",
-    shipped: "#06b6d4",
-    out_for_delivery: "#8b5cf6",
-    delivered: "#10b981",
-    payment_collected: "#059669",
-    cancelled: "#ef4444",
-    rto_initiated: "#f97316",
-    rto_delivered: "#dc2626",
+    placed: "#f59e0b",        // Orange - Order placed
+    shipped: "#06b6d4",        // Cyan - In transit (includes softdata, pickup, accepted, in transit)
+    out_for_delivery: "#8b5cf6", // Purple - Out for delivery
+    delivered: "#10b981",      // Green - Delivered
+    cancelled: "#ef4444",      // Red - Cancelled
   };
   const color = colorMap[status] || "#6b7280";
+
+  // Human-readable labels
+  const labelMap = {
+    placed: "Placed",
+    shipped: "In Transit",
+    out_for_delivery: "Out for Delivery",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+  };
 
   return (
     <span
@@ -420,18 +423,21 @@ function StatusBadge({ status }) {
         borderRadius: "12px",
         fontSize: "12px",
         fontWeight: 600,
-        textTransform: "capitalize",
         backgroundColor: `${color}18`,
         color: color,
         border: `1px solid ${color}40`,
       }}
     >
-      {formatStatusLabel(status)}
+      {labelMap[status] || formatStatusLabel(status)}
     </span>
   );
 }
 
-function OrderRow({ order, authFetch }) {
+function OrderRow({ order, authFetch, onOrderUpdate }) {
+  const [showTracking, setShowTracking] = useState(false);
+  const [trackingData, setTrackingData] = useState(null);
+  const [loadingTracking, setLoadingTracking] = useState(false);
+
   const handleGenerateLabel = async () => {
     try {
       // Fetch full order details WITH items
@@ -450,50 +456,172 @@ function OrderRow({ order, authFetch }) {
     }
   };
 
+  const handleOrderClick = async () => {
+    if (!order.tracking_token) {
+      toast.error("No tracking token available yet");
+      return;
+    }
+
+    if (showTracking) {
+      setShowTracking(false);
+      return;
+    }
+
+    setLoadingTracking(true);
+    try {
+      const response = await fetch(`/api/track?token=${encodeURIComponent(order.tracking_token)}`);
+      const data = await response.json();
+      
+      if (response.ok && data) {
+        setTrackingData(data);
+        setShowTracking(true);
+      } else {
+        toast.error("Could not fetch tracking information");
+      }
+    } catch (err) {
+      console.error("Error fetching tracking:", err);
+      toast.error("Failed to fetch tracking");
+    } finally {
+      setLoadingTracking(false);
+    }
+  };
+
   return (
-    <tr>
-      <td>
-        <strong>{order.order_number || order.id}</strong>
-      </td>
-      <td>{formatDate(order.created_at)}</td>
-      <td>{formatCurrency(order.total_price)}</td>
-      <td>
-        <span className={styles.status}>
-          {order.payment_status === "paid" 
-            ? "Paid" 
-            : order.payment_status === "cod_pending" 
-            ? "COD Pending" 
-            : order.payment_status === "cod_collected"
-            ? "COD Collected"
-            : order.payment_status === "refund_initiated"
-            ? "Refunding"
-            : order.payment_status === "refunded"
-            ? "Refunded"
-            : order.payment_status || "pending"}
-        </span>
-      </td>
-      <td>
-        <StatusBadge status={order.order_status || "placed"} />
-      </td>
-      <td>
-        <button
-          className={`${styles.button} ${styles.buttonSecondary}`}
-          style={{ fontSize: "12px", padding: "6px 12px" }}
-          onClick={handleGenerateLabel}
-        >
-          📦 Label
-        </button>
-      </td>
-    </tr>
+    <>
+      <tr>
+        <td>
+          <strong 
+            onClick={handleOrderClick}
+            style={{ 
+              cursor: order.tracking_token ? "pointer" : "default",
+              color: order.tracking_token ? "#C9A84C" : "inherit",
+              textDecoration: order.tracking_token ? "underline" : "none"
+            }}
+          >
+            {order.order_number || order.id}
+            {loadingTracking && " ⏳"}
+          </strong>
+        </td>
+        <td>{formatDate(order.created_at)}</td>
+        <td>{formatCurrency(order.total_price)}</td>
+        <td>
+          <span className={styles.status}>
+            {order.payment_status === "paid" || order.payment_status === "cod_collected"
+              ? "Paid" 
+              : order.payment_status === "cod_pending" 
+              ? "Pending" 
+              : order.payment_status === "refund_initiated"
+              ? "Refunding"
+              : order.payment_status === "refunded"
+              ? "Refunded"
+              : order.payment_status || "Pending"}
+          </span>
+        </td>
+        <td>
+          <StatusBadge status={order.order_status || "placed"} />
+        </td>
+        <td>
+          <button
+            className={`${styles.button} ${styles.buttonSecondary}`}
+            style={{ fontSize: "12px", padding: "6px 12px" }}
+            onClick={handleGenerateLabel}
+          >
+            📦 Label
+          </button>
+        </td>
+      </tr>
+      
+      {/* Tracking Details Row */}
+      {showTracking && trackingData && (
+        <tr>
+          <td colSpan="6" style={{ padding: "16px", background: "#f9fafb" }}>
+            <div style={{ maxWidth: "800px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <h4 style={{ margin: 0 }}>📍 Tracking Details</h4>
+                <button
+                  onClick={() => setShowTracking(false)}
+                  style={{ 
+                    background: "none", 
+                    border: "none", 
+                    cursor: "pointer", 
+                    fontSize: "18px",
+                    color: "#6b7280"
+                  }}
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div style={{ marginBottom: "12px" }}>
+                <strong style={{ color: "#3B1F0F" }}>Status:</strong> {trackingData.label}
+              </div>
+              
+              {trackingData.expectedDelivery && (
+                <div style={{ marginBottom: "12px", color: "#059669" }}>
+                  <strong>Expected Delivery:</strong> {trackingData.expectedDelivery}
+                </div>
+              )}
+              
+              {trackingData.issue && (
+                <div style={{ 
+                  padding: "10px 12px", 
+                  background: "#fef3c7", 
+                  border: "1px solid #f59e0b",
+                  borderRadius: "8px",
+                  marginBottom: "12px"
+                }}>
+                  <strong style={{ color: "#b45309" }}>⚠️ Issue Detected</strong>
+                  <p style={{ margin: "4px 0 0 0", fontSize: "13px", color: "#92400e" }}>
+                    There is a delivery issue. Contact customer or courier.
+                  </p>
+                </div>
+              )}
+              
+              {trackingData.events && trackingData.events.length > 0 && (
+                <div>
+                  <strong style={{ display: "block", marginBottom: "8px" }}>Tracking History:</strong>
+                  <div style={{ 
+                    borderLeft: "2px solid rgba(201,168,76,0.3)", 
+                    paddingLeft: "12px" 
+                  }}>
+                    {trackingData.events.map((event, idx) => (
+                      <div key={idx} style={{ 
+                        marginBottom: "12px", 
+                        paddingBottom: "12px",
+                        borderBottom: idx < trackingData.events.length - 1 ? "1px solid rgba(201,168,76,0.15)" : "none"
+                      }}>
+                        <div style={{ fontSize: "13px", color: "#3B1F0F", fontWeight: 600 }}>
+                          {event.status}
+                        </div>
+                        {event.location && (
+                          <div style={{ fontSize: "12px", color: "#6B5948", marginTop: "2px" }}>
+                            📍 {event.location}
+                          </div>
+                        )}
+                        <div style={{ fontSize: "11px", color: "#9CA3AF", marginTop: "2px" }}>
+                          {event.time}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
 
-function OrdersTable({ orders, loading, authFetch, columnFilters, setColumnFilters }) {
+function OrdersTable({ orders, loading, authFetch, columnFilters, setColumnFilters, onOrderUpdate }) {
   if (loading) return <div className={styles.empty}>Loading orders...</div>;
 
   // Get unique values for dropdown filters
-  const uniquePaymentStatuses = [...new Set(orders.map(o => o.payment_status || "pending"))];
   const uniqueOrderStatuses = [...new Set(orders.map(o => o.order_status || "placed"))];
+  
+  // All possible payment status labels (not just what's in current orders)
+  const allPaymentLabels = ["Paid", "Pending", "Refunding", "Refunded", "Failed"];
 
   return (
     <div className={styles.tableWrap}>
@@ -547,9 +675,9 @@ function OrdersTable({ orders, loading, authFetch, columnFilters, setColumnFilte
                 onChange={(e) => setColumnFilters({ ...columnFilters, payment: e.target.value })}
               >
                 <option value="">All</option>
-                {uniquePaymentStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {status}
+                {allPaymentLabels.map((label) => (
+                  <option key={label} value={label}>
+                    {label}
                   </option>
                 ))}
               </select>
@@ -573,7 +701,7 @@ function OrdersTable({ orders, loading, authFetch, columnFilters, setColumnFilte
         </thead>
         <tbody>
           {orders.map((order) => (
-            <OrderRow key={order.id} order={order} authFetch={authFetch} />
+            <OrderRow key={order.id} order={order} authFetch={authFetch} onOrderUpdate={onOrderUpdate} />
           ))}
           {!orders.length && (
             <tr>
@@ -657,8 +785,8 @@ function TransactionDetailsTable({ orders, onClose }) {
   });
   const [filteredOrders, setFilteredOrders] = useState(orders);
 
-  // Get unique values for dropdown filters
-  const uniquePaymentStatuses = [...new Set(orders.map(o => o.payment_status || "pending"))];
+  // All possible payment status labels (not just what's in current orders)
+  const allPaymentLabels = ["Paid", "Pending", "Refunding", "Refunded", "Failed"];
 
   // Apply filters
   useEffect(() => {
@@ -675,9 +803,17 @@ function TransactionDetailsTable({ orders, onClose }) {
       );
     }
     if (columnFilters.payment) {
-      filtered = filtered.filter(order =>
-        (order.payment_status || "pending") === columnFilters.payment
-      );
+      filtered = filtered.filter(order => {
+        const status = order.payment_status || "cod_pending"; // Default to cod_pending instead of "pending"
+        const label = 
+          status === "paid" || status === "cod_collected" ? "Paid" :
+          status === "cod_pending" || status === "pending" ? "Pending" : // Handle both cod_pending and pending
+          status === "refund_initiated" ? "Refunding" :
+          status === "refunded" ? "Refunded" :
+          status === "failed" ? "Failed" :
+          "Pending"; // Final fallback
+        return label === columnFilters.payment;
+      });
     }
     if (columnFilters.status) {
       filtered = filtered.filter(order =>
@@ -803,9 +939,9 @@ function TransactionDetailsTable({ orders, onClose }) {
                     onChange={(e) => setColumnFilters({ ...columnFilters, payment: e.target.value })}
                   >
                     <option value="">All</option>
-                    {uniquePaymentStatuses.map((status) => (
-                      <option key={status} value={status}>
-                        {status}
+                    {allPaymentLabels.map((label) => (
+                      <option key={label} value={label}>
+                        {label}
                       </option>
                     ))}
                   </select>
@@ -923,9 +1059,17 @@ export default function AdminOrdersPage() {
       );
     }
     if (columnFilters.payment) {
-      filtered = filtered.filter(order =>
-        (order.payment_status || "pending") === columnFilters.payment
-      );
+      filtered = filtered.filter(order => {
+        const status = order.payment_status || "cod_pending"; // Default to cod_pending instead of "pending"
+        const label = 
+          status === "paid" || status === "cod_collected" ? "Paid" :
+          status === "cod_pending" || status === "pending" ? "Pending" : // Handle both cod_pending and pending
+          status === "refund_initiated" ? "Refunding" :
+          status === "refunded" ? "Refunded" :
+          status === "failed" ? "Failed" :
+          "Pending"; // Final fallback
+        return label === columnFilters.payment;
+      });
     }
     if (columnFilters.status) {
       filtered = filtered.filter(order =>
@@ -1009,6 +1153,7 @@ export default function AdminOrdersPage() {
           authFetch={authFetch} 
           columnFilters={columnFilters}
           setColumnFilters={setColumnFilters}
+          onOrderUpdate={load}
         />
       </section>
 
@@ -1016,3 +1161,4 @@ export default function AdminOrdersPage() {
     </>
   );
 }
+

@@ -1,57 +1,10 @@
-import { supabaseAdmin } from "@/src/frontend/lib/supabase-admin";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useAuth } from "@/src/frontend/hooks/useAuth";
 import styles from "./admin.module.css";
 
-export const dynamic = "force-dynamic";
-export const metadata = {
-  title: "Admin Dashboard | WIN-DIA",
-};
-
-const PENDING_ORDER_STATUSES = ["placed", "confirmed", "processing"];
 const RECENT_ORDERS_LIMIT = 8;
-
-// ---- Data: pulls all dashboard counts/aggregates in parallel ----
-async function loadStats() {
-  const [
-    ordersCount,
-    pendingCount,
-    productsCount,
-    usersCount,
-    paidOrders,
-    recentOrders,
-  ] = await Promise.all([
-    supabaseAdmin.from("orders").select("*", { count: "exact", head: true }),
-    supabaseAdmin
-      .from("orders")
-      .select("*", { count: "exact", head: true })
-      .in("order_status", PENDING_ORDER_STATUSES),
-    supabaseAdmin.from("products").select("*", { count: "exact", head: true }),
-    supabaseAdmin.from("profiles").select("*", { count: "exact", head: true }),
-    supabaseAdmin
-      .from("orders")
-      .select("total_price")
-      .eq("payment_status", "paid")
-      .neq("order_status", "cancelled"),
-    supabaseAdmin
-      .from("orders")
-      .select("id, order_number, total_price, payment_status, order_status, created_at")
-      .order("created_at", { ascending: false })
-      .limit(RECENT_ORDERS_LIMIT),
-  ]);
-
-  const revenue = (paidOrders.data || []).reduce(
-    (sum, order) => sum + Number(order.total_price || 0),
-    0
-  );
-
-  return {
-    totalOrders: ordersCount.count || 0,
-    pendingOrders: pendingCount.count || 0,
-    totalProducts: productsCount.count || 0,
-    totalUsers: usersCount.count || 0,
-    revenue,
-    recentOrders: recentOrders.data || [],
-  };
-}
 
 function money(value) {
   return `₹${Number(value || 0).toFixed(0)}`;
@@ -59,6 +12,43 @@ function money(value) {
 
 function formatDate(value) {
   return value ? new Date(value).toLocaleDateString("en-IN") : "-";
+}
+
+// Status badge component matching orders page
+function StatusBadge({ status }) {
+  const colorMap = {
+    placed: "#f59e0b",
+    shipped: "#06b6d4",
+    out_for_delivery: "#8b5cf6",
+    delivered: "#10b981",
+    cancelled: "#ef4444",
+  };
+  const color = colorMap[status] || "#6b7280";
+
+  const labelMap = {
+    placed: "Placed",
+    shipped: "In Transit",
+    out_for_delivery: "Out for Delivery",
+    delivered: "Delivered",
+    cancelled: "Cancelled",
+  };
+
+  return (
+    <span
+      style={{
+        display: "inline-block",
+        padding: "4px 12px",
+        borderRadius: "12px",
+        fontSize: "12px",
+        fontWeight: 600,
+        backgroundColor: `${color}18`,
+        color: color,
+        border: `1px solid ${color}40`,
+      }}
+    >
+      {labelMap[status] || status}
+    </span>
+  );
 }
 
 // ---- Single stat card ----
@@ -71,12 +61,11 @@ function StatCard({ value, label }) {
   );
 }
 
-// ---- Stat cards row, derived from loaded stats ----
+// ---- Stat cards row ----
 function StatsGrid({ stats }) {
   const cards = [
     { value: stats.totalOrders, label: "Orders" },
     { value: stats.pendingOrders, label: "Pending" },
-    { value: money(stats.revenue), label: "Paid Revenue" },
     { value: stats.totalProducts, label: "Products" },
     { value: stats.totalUsers, label: "Users" },
   ];
@@ -98,10 +87,20 @@ function OrderRow({ order }) {
       <td>{formatDate(order.created_at)}</td>
       <td>{money(order.total_price)}</td>
       <td>
-        <span className={styles.status}>{order.payment_status || "pending"}</span>
+        <span className={styles.status}>
+          {order.payment_status === "paid" || order.payment_status === "cod_collected"
+            ? "Paid" 
+            : order.payment_status === "cod_pending" 
+            ? "Pending" 
+            : order.payment_status === "refund_initiated"
+            ? "Refunding"
+            : order.payment_status === "refunded"
+            ? "Refunded"
+            : order.payment_status || "Pending"}
+        </span>
       </td>
       <td>
-        <span className={styles.status}>{order.order_status || "placed"}</span>
+        <StatusBadge status={order.order_status || "placed"} />
       </td>
     </tr>
   );
@@ -141,8 +140,63 @@ function RecentOrdersPanel({ orders }) {
   );
 }
 
-export default async function AdminDashboardPage() {
-  const stats = await loadStats();
+export default function AdminDashboardPage() {
+  const { authFetch } = useAuth();
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    pendingOrders: 0,
+    totalProducts: 0,
+    totalUsers: 0,
+    recentOrders: [],
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Fetch dashboard stats
+    Promise.all([
+      authFetch("/api/admin/orders").then(r => r.json()),
+      authFetch("/api/admin/products").then(r => r.json()),
+      authFetch("/api/admin/users").then(r => r.json()),
+    ])
+      .then(async ([ordersRes, productsRes, usersRes]) => {
+        const orders = ordersRes.data?.items || ordersRes.orders || ordersRes.data || [];
+        const products = productsRes.data?.items || productsRes.products || productsRes.data || [];
+        const users = usersRes.data?.items || usersRes.users || usersRes.data || [];
+
+        // Don't fetch tracking - just use database values
+        // The tracking API was overwriting correct "delivered" status with wrong data
+        
+        // Calculate stats with current database data
+        const pendingStatuses = ["placed", "shipped", "out_for_delivery"];
+        const pendingOrders = orders.filter(o => pendingStatuses.includes(o.order_status));
+
+        // Get recent orders
+        const recentOrders = orders
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, RECENT_ORDERS_LIMIT);
+
+        setStats({
+          totalOrders: orders.length,
+          pendingOrders: pendingOrders.length,
+          totalProducts: products.length,
+          totalUsers: users.length,
+          recentOrders,
+        });
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("Error loading dashboard stats:", err);
+        setLoading(false);
+      });
+  }, [authFetch]);
+
+  if (loading) {
+    return (
+      <div className={styles.empty}>
+        <div>Loading dashboard...</div>
+      </div>
+    );
+  }
 
   return (
     <>
