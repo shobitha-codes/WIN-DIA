@@ -227,8 +227,8 @@ export class RequestScopedContainer {
         ) as any;
       case ServiceTokens.CMSService:
         return new CMSServiceImpl(
-          this.resolve(RepositoryTokens.PageContentRepository),
-          this.resolve(RepositoryTokens.BannerRepository)
+          this.resolve(RepositoryTokens.BannerRepository),
+          this.resolve(RepositoryTokens.PageContentRepository)
         ) as any;
       case ServiceTokens.SettingsService:
         return new SettingsServiceImpl(
