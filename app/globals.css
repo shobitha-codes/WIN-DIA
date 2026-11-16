@@ -2,6 +2,8 @@
    GLOBAL STYLES — inlined so no separate CSS files are needed
    ============================================================ */
 
+
+
 @import url('../src/frontend/variables.css');
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=Jost:wght@300;400;500&display=swap');
 
@@ -69,3 +71,17 @@ main {
   --shadow-md:  0 8px 26px rgba(59,31,10,0.12);
   --shadow-lg:  0 18px 44px rgba(59,31,10,0.18);
   }
+
+  html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden; /* fallback for older browsers */
+  overflow-x: clip;   /* modern browsers; keeps position: sticky working */
+}
+
+img,
+video,
+svg {
+  max-width: 100%;
+}

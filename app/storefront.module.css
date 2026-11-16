@@ -562,3 +562,59 @@
   letter-spacing: 0.5px;
   white-space: nowrap;
 }
+
+/* ── MOBILE NAV FIX (must stay at the very bottom) ── */
+@media (max-width: 768px) {
+  .navInner {
+    padding: 8px 10px;
+    gap: 6px;
+  }
+
+  .brand {
+    gap: 6px;
+    min-width: 0;
+    flex: 1 1 auto;
+  }
+
+  .logoWrap img {
+    width: 36px;
+    height: 36px;
+  }
+
+  .brandWordmark {
+    min-width: 0;
+  }
+
+  .brandName {
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+
+  .brandTagline {
+    margin-top: 3px;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+
+  .links {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+}
+
+/* Very small phones (360px and below) */
+@media (max-width: 400px) {
+  .brandName {
+    font-size: 14px;
+    letter-spacing: 0.5px;
+  }
+
+  .brandTagline {
+    font-size: 9px;
+  }
+
+  .pill {
+    padding: 6px 8px;
+    font-size: 0.7rem;
+  }
+}

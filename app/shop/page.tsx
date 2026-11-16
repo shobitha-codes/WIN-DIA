@@ -91,6 +91,10 @@ async function fetchAllProducts(): Promise<Product[]> {
           offerDetails: "",
           delivery: "🚚 Free Delivery",
           netWeight: parseNetWeight(p.net_weight),
+                    countInStock:
+            p.count_in_stock == null && p.countInStock == null
+              ? undefined
+              : Number(p.count_in_stock ?? p.countInStock),
         };
       });
   } catch {
@@ -110,7 +114,7 @@ export default async function ShopPage() {
         ])}
       />
       <Hero />
-      <ComboOffer />
+      <ComboOffer flavorProducts={products} />
       <GlutenFree products={products.length ? products : undefined} />
     </main>
   );

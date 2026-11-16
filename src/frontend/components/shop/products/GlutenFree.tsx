@@ -1,5 +1,5 @@
 "use client";
-
+import { flavorLabel } from "@/src/frontend/lib/comboFlavors";
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
@@ -12,7 +12,7 @@ import { supabase } from "@/src/frontend/lib/supabase/client";
 
 import { ProductCard } from "./ProductCard";
 import { ComboSelector } from "./ComboSelector";
-import { toStoreProduct, type Product, type ProductTheme } from "./productShared";
+import { toStoreProduct, isOutOfStock, type Product, type ProductTheme } from "./productShared";
 
 import styles from "./GlutenFree.module.scss";
 
@@ -21,6 +21,7 @@ type ProductRangeProps = {
   readonly headingId: string;
   readonly products: readonly Product[];
   readonly theme: ProductTheme;
+  readonly flavorProducts?: readonly Product[];
 };
 
 /**
@@ -31,7 +32,7 @@ type ProductRangeProps = {
  * Clicking a card takes you to /product/[id] page.
  * Adding to cart/wishlist requires a logged-in Supabase session.
  */
-export function ProductRange({ heading, headingId, products, theme }: ProductRangeProps) {
+export function ProductRange({ heading, headingId, products, theme, flavorProducts }: ProductRangeProps) {
   const dispatch = useDispatch();
   const router = useRouter();
   const wishlistItems = useSelector((s: any) => s.wishlist.wishlistItems);
@@ -50,12 +51,31 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
   );
 
   // Available flavors for combo selector (hardcoded for now, should come from DB)
-  const availableFlavors = useMemo(() => [
-    { id: "jeera", name: "Jeera", available: true, stock: 100 },
-    { id: "garlic", name: "Garlic", available: true, stock: 100 },
-    { id: "onion", name: "Onion", available: true, stock: 100 },
-    { id: "curry-leaf", name: "Curry Leaves", available: true, stock: 100 },
-  ], []);
+    // Flavour stock comes from the products fetched on the shop page.
+  // If a flavour's stock is unknown, it is treated as available.
+  const availableFlavors = useMemo(() => {
+    const flavors = [
+      { id: "jeera", name: "Jeera" },
+      { id: "garlic", name: "Garlic" },
+      { id: "onion", name: "Onion" },
+      { id: "curry-leaf", name: "Curry Leaves" },
+    ];
+
+    return flavors.map(({ id, name }) => {
+      const match = flavorProducts?.find((p) => p.id === id);
+      const stock = match?.countInStock ?? 100;
+      return { id, name, available: stock > 0, stock };
+    });
+  }, [flavorProducts]);
+
+  // Names of flavours that are out of stock (only used for the combo card)
+  const unavailableFlavors = useMemo(
+    () =>
+      theme === "combo"
+        ? availableFlavors.filter((f) => !f.available).map((f) => flavorLabel(f.id))
+        : [],
+    [availableFlavors, theme]
+  );
 
   const requireAuthForWishlist = async () => {
     const { data: { user } } = await supabase.auth.getUser();
@@ -70,6 +90,11 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
     // Check if this is a combo product
     const isCombo = theme === "combo" || product.id === "assorted-combo";
     
+        if (isOutOfStock(product)) {
+      toast.error("This product is out of stock");
+      return;
+    }
+
     if (isCombo && next > 0) {
       // Open combo selector modal instead of directly adding to cart
       // No auth required - will check at checkout
@@ -151,6 +176,7 @@ export function ProductRange({ heading, headingId, products, theme }: ProductRan
               isWishlisted={wishlistedIds.has(storeProductId)}
               onQuantityChange={(q) => setQuantity(product, q)}
               onToggleWishlist={() => toggleWishlist(product)}
+              unavailableFlavors={unavailableFlavors} 
             />
           );
         })}

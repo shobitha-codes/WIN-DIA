@@ -329,3 +329,117 @@
     font-size: 0.75rem;
   }
 }
+
+
+.outOfStock .carousel {
+  position: relative;
+  overflow: hidden;
+}
+
+.outOfStock .image {
+  filter: grayscale(1) opacity(0.55);
+  transition: filter 0.3s ease;
+}
+
+.outOfStock:hover .image {
+  filter: grayscale(0.6) opacity(0.75);
+}
+
+.outBadge {
+  background: #b3261e !important;
+  color: #fff !important;
+}
+
+.outOfStock .wishlistButton {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.notifyButton {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  border: 0;
+  padding: 12px;
+  background: #3b2314;
+  color: #fff;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+
+.outOfStock .carousel:hover .notifyButton,
+.notifyButton:focus-visible {
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  .notifyButton {
+    transform: translateY(0);
+  }
+}
+
+.notifyButton {
+  text-align: center;
+  cursor: default;
+}
+
+.outOfStock .imageLink,
+.outOfStock .carousel,
+.outOfStock .notifyButton {
+  cursor: not-allowed;
+}
+
+/* Combo card: one flavour is out of stock, the combo is still purchasable */
+.flavorBadge {
+  position: absolute;
+  top: 2.6rem;            /* sits under the "6 × 40G BUNDLE" badge */
+  left: 0.6rem;
+  z-index: 2;
+  padding: 0.25rem 0.6rem;
+  color: #fff;
+  background: #b3261e;
+  border-radius: 999px;
+  font-family: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  font-size: 0.72rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.flavorNotice {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 5;
+  padding: 12px;
+  background: #3b2314;
+  color: #fff;
+  font-size: 13px;
+  text-align: center;
+  pointer-events: none;   /* doesn't block clicking the card */
+  transform: translateY(100%);
+  transition: transform 0.25s ease;
+}
+
+.carousel:hover .flavorNotice {
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  .flavorNotice { transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .flavorBadge {
+    top: 1.6rem;
+    left: 0.35rem;
+    padding: 0.15rem 0.4rem;
+    font-size: 0.55rem;
+  }
+}
