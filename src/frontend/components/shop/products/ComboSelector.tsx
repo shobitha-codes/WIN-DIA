@@ -203,7 +203,7 @@ export function ComboSelector({ isOpen, onClose, onConfirm, availableFlavors }: 
                     </button>
                   </div>
 
-                  {isSelected && (
+                                    {isSelected && (
                     <div className={styles.checkmark}>
                       <FiCheck />
                     </div>
@@ -211,8 +211,24 @@ export function ComboSelector({ isOpen, onClose, onConfirm, availableFlavors }: 
                 </div>
               );
             })}
-          </div>
 
+            {/* Out-of-stock flavours: shown but blocked */}
+            {availableFlavors
+              .filter((f) => !f.available)
+              .map((flavor) => (
+                <div
+                  key={flavor.id}
+                  className={`${styles.flavorCard} ${styles.blocked}`}
+                  aria-disabled="true"
+                >
+                  <div className={styles.flavorInfo}>
+                    <h3>{flavor.name}</h3>
+                    <p className={styles.backSoon}>Back in stock soon</p>
+                  </div>
+                  <span className={styles.outBadge}>Out of stock</span>
+                </div>
+              ))}
+          </div>
           {/* Validation message */}
           {!isValid && totalSelected > 0 && (
             <div className={styles.validation}>

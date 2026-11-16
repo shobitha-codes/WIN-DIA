@@ -1,13 +1,14 @@
-
 "use client";
 
 import Image from "next/image";
 import Link from "next/link";
 import { useRef, useState } from "react";
 
-import { toRouteId, type Product, type ProductTheme } from "./productShared";
+import { isOutOfStock, toRouteId, type Product, type ProductTheme } from "./productShared";
 
 import styles from "./ProductCard.module.scss";
+
+
 
 type ProductCardProps = {
   readonly product: Product;
@@ -16,15 +17,25 @@ type ProductCardProps = {
   readonly isWishlisted: boolean;
   readonly onQuantityChange: (quantity: number) => void;
   readonly onToggleWishlist: () => void;
+  readonly unavailableFlavors?: readonly string[];
 };
+
+
 
 export function ProductCard({
   product,
   theme,
   isWishlisted,
   onToggleWishlist,
+  unavailableFlavors,                       
 }: ProductCardProps) {
   const href = `/product/${toRouteId(theme, product)}`;
+  const outOfStock = isOutOfStock(product);
+
+  // ← ADD THESE 3 LINES right below `const outOfStock = ...`
+  const missingFlavors = unavailableFlavors ?? [];
+  const hasMissingFlavor = !outOfStock && missingFlavors.length > 0;
+  const missingLabel = missingFlavors.join(", ");
 
   const images = Array.isArray(product.image)
     ? product.image
@@ -72,32 +83,42 @@ export function ProductCard({
     touchStartX.current = null;
   };
 
+
+    const imageElement = (
+    <Image
+      className={styles.image}
+      src={images[currentImage]}
+      alt={`Windia Thins ${product.name}${
+        images.length > 1 ? ` - Image ${currentImage + 1}` : ""
+      }`}
+      fill
+      sizes={
+        theme === "combo"
+          ? "(max-width: 640px) 100vw, 560px"
+          : "(max-width: 640px) 33.333vw, 33.333vw"
+      }
+      priority={currentImage === 0}
+    />
+  );
+
   return (
-    <li className={styles.tile} data-theme={theme}>
+    <li
+      className={`${styles.tile} ${outOfStock ? styles.outOfStock : ""}`}
+      data-theme={theme}
+    >
       <div className={styles.imageWrap}>
         <div
           className={styles.carousel}
           onTouchStart={handleTouchStart}
           onTouchEnd={handleTouchEnd}
         >
-          <Link className={styles.imageLink} href={href}>
-            <Image
-              className={styles.image}
-              src={images[currentImage]}
-              alt={`Windia Thins ${product.name}${
-                images.length > 1
-                  ? ` - Image ${currentImage + 1}`
-                  : ""
-              }`}
-              fill
-              sizes={
-                theme === "combo"
-                  ? "(max-width: 640px) 100vw, 560px"
-                  : "(max-width: 640px) 33.333vw, 33.333vw"
-              }
-              priority={currentImage === 0}
-            />
-          </Link>
+                    {outOfStock ? (
+            <div className={styles.imageLink}>{imageElement}</div>
+          ) : (
+            <Link className={styles.imageLink} href={href}>
+              {imageElement}
+            </Link>
+          )}
 
           {images.length > 1 && (
             <>
@@ -138,8 +159,20 @@ export function ProductCard({
             </>
           )}
 
-          {product.offer && (
-            <span className={styles.offerBadge}>{product.offer}</span>
+          {(outOfStock || product.offer) && (
+            <span
+              className={`${styles.offerBadge} ${
+                outOfStock ? styles.outBadge : ""
+              }`}
+            >
+              {outOfStock ? "Out of stock" : product.offer}
+            </span>
+          )}
+
+                    {hasMissingFlavor && (
+            <span className={styles.flavorBadge}>
+              {missingLabel} out of stock
+            </span>
           )}
 
           <button
@@ -147,6 +180,7 @@ export function ProductCard({
               isWishlisted ? styles.wishlistActive : ""
             }`}
             type="button"
+            disabled={outOfStock}
             aria-label={`${isWishlisted ? "Remove" : "Add"} ${
               product.name
             } ${isWishlisted ? "from" : "to"} wishlist`}
@@ -154,9 +188,24 @@ export function ProductCard({
           >
             {isWishlisted ? "♥" : "♡"}
           </button>
+
+                    {hasMissingFlavor && (
+            <div className={styles.flavorNotice}>
+              {missingLabel} back in stock soon
+            </div>
+          )}
+
+                    {outOfStock && (
+            <div className={styles.notifyButton}>Back in stock soon</div>
+          )}
+
+
+          
+
+
+
         </div>
       </div>
     </li>
   );
 }
-

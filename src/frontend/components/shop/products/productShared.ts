@@ -31,6 +31,7 @@ export type Product = {
   readonly reviews?: string;
   readonly reviewList?: readonly string[];
   readonly netWeight?: number | string; // Weight in grams (e.g., 240 or "240g")
+    readonly countInStock?: number; // undefined = unknown, treated as in stock
 };
 
 /**
@@ -53,6 +54,9 @@ export function toRouteId(
   product: Pick<Product, "id">
 ) {
   return `${theme}-${product.id}`;
+}
+export function isOutOfStock(product: Pick<Product, "countInStock">) {
+  return typeof product.countInStock === "number" && product.countInStock <= 0;
 }
 
 /**
@@ -118,11 +122,12 @@ export function toStoreProduct(
 
     image,
 
-    countInStock: 100,
+        countInStock: product.countInStock ?? 100,
     
     // Use actual product weight (numeric grams)
     // For WIN-DIA bundles: 6 packets × 40g = 240g per bundle
     netWeight: typeof product.netWeight === "number" 
+    
       ? product.netWeight 
       : (typeof product.netWeight === "string" 
           ? parseInt(product.netWeight.replace(/[^0-9]/g, ""), 10) || BundlePricing.BUNDLE_WEIGHT_GRAMS

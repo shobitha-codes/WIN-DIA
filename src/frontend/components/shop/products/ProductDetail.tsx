@@ -3,7 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useRef, useState, useMemo, type TouchEvent } from "react";
+import { useRef, useState, useMemo, useEffect, type TouchEvent } from "react";
 import toast from "react-hot-toast";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -102,12 +102,63 @@ function ProductDetailContent({
   const [isComboModalOpen, setIsComboModalOpen] = useState(false);
 
   // Define available flavors for combo
-  const comboFlavors = [
-    { id: 'curry-leaves', name: 'Curry Leaves', available: true, stock: 100 },
-    { id: 'garlic', name: 'Garlic', available: true, stock: 100 },
-    { id: 'jeera', name: 'Jeera', available: true, stock: 100 },
-    { id: 'onion', name: 'Onion', available: true, stock: 100 },
-  ];
+    // Real flavour stock, fetched from the products API (combo products only)
+  const [flavorStock, setFlavorStock] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!isComboProduct) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const res = await fetch("/api/products");
+        if (!res.ok) return;
+        const data = await res.json();
+        const list = data?.data?.items ?? data?.data ?? data?.products ?? [];
+        if (!Array.isArray(list)) return;
+
+        const stock: Record<string, number> = {};
+        for (const p of list as Record<string, unknown>[]) {
+          const flavor = String(p.flavor ?? "").toLowerCase();
+          const slug = String(p.slug ?? "").toLowerCase();
+          if (slug.includes("combo") || slug.includes("assorted") || flavor === "assorted") continue;
+
+          let id = "";
+          if (flavor.includes("jeera") || flavor.includes("cumin")) id = "jeera";
+          else if (flavor.includes("garlic")) id = "garlic";
+          else if (flavor.includes("onion")) id = "onion";
+          else if (flavor.includes("curry") || flavor.includes("leaf")) id = "curry-leaves";
+          else continue;
+
+          const raw = p.count_in_stock ?? p.countInStock;
+          if (raw == null) continue; // unknown stock = treated as available
+          stock[id] = Number(raw);
+        }
+
+        if (!cancelled) setFlavorStock(stock);
+      } catch {
+        /* keep every flavour available if the request fails */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isComboProduct]);
+
+  const comboFlavors = useMemo(
+    () =>
+      [
+        { id: "curry-leaves", name: "Curry Leaves" },
+        { id: "garlic", name: "Garlic" },
+        { id: "jeera", name: "Jeera" },
+        { id: "onion", name: "Onion" },
+      ].map(({ id, name }) => {
+        const stock = flavorStock[id] ?? 100;
+        return { id, name, available: stock > 0, stock };
+      }),
+    [flavorStock]
+  );
 
   const handleComboConfirm = async (selections: Record<string, number>) => {
     // No auth required for adding combo to cart
