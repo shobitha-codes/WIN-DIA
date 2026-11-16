@@ -1,6 +1,6 @@
 const TRACK_URL = 'https://blktracksvc.dtdc.com/dtdc-api/rest/JSONCnTrk/getTrackDetails';
 
-export type TrackStep = 'placed' | 'confirmed' | 'shipped' | 'out_for_delivery' | 'delivered';
+export type TrackStep = 'placed' | 'shipped' | 'out_for_delivery' | 'delivered';
 
 export interface TrackEvent { status: string; location: string; time: string }
 export interface TrackResult {
@@ -27,7 +27,7 @@ function formatTime(date?: string, time?: string): string {
 
 function mapStep(text: string): { step: TrackStep; label: string; issue: boolean } {
   const t = text.toLowerCase().trim();
-  if (!t) return { step: 'confirmed', label: 'Booked with courier', issue: false };
+  if (!t) return { step: 'shipped', label: 'Booked with courier', issue: false };
 
   if (/(rto|return to origin|undeliver|not deliver|refused|held|misrout)/.test(t))
     return { step: 'shipped', label: text, issue: true };
@@ -35,14 +35,13 @@ function mapStep(text: string): { step: TrackStep; label: string; issue: boolean
     return { step: 'out_for_delivery', label: 'Out for delivery', issue: false };
   if (t.includes('deliver'))
     return { step: 'delivered', label: 'Delivered', issue: false };
-  if (/(pickup|picked up awaited|booked|softdata|schedul)/.test(t) && !t.includes('picked up'))
-    return { step: 'confirmed', label: text, issue: false };   // e.g. "Pickup scheduled"
-  return { step: 'shipped', label: text, issue: false };       // picked up, in transit, manifested...
+  // Pickup scheduled, softdata, booked → all map to "shipped"
+  return { step: 'shipped', label: text, issue: false };
 }
 
 export async function getDtdcTracking(awb: string): Promise<TrackResult> {
   const fail = (error: string): TrackResult =>
-    ({ ok: false, step: 'confirmed', label: 'Booked with courier', issue: false, events: [], error });
+    ({ ok: false, step: 'shipped', label: 'Booked with courier', issue: false, events: [], error });
 
   const token = process.env.DTDC_TRACKING_TOKEN;
   if (!token) return fail('Tracking not configured');

@@ -10,25 +10,33 @@ import {
 import { useAuth } from "@/src/frontend/hooks/useAuth";
 import styles from "./OrderConfirmationPage.module.css";
 
-// Status steps differ based on payment method
-const getCODStatusSteps = () => ["placed", "confirmed", "shipped", "out_for_delivery", "delivered", "payment_collected"];
-const getCODStatusLabels = () => ({ 
-  placed: "Order Placed", 
-  confirmed: "Confirmed", 
-  shipped: "Shipped", 
-  out_for_delivery: "Out for Delivery", 
-  delivered: "Delivered",
-  payment_collected: "Payment Collected"
-});
+// DTDC Tracking stages - simplified for customer view
+const getStatusSteps = (isCOD) => {
+  if (isCOD) {
+    return ["placed", "confirmed", "shipped", "out_for_delivery", "delivered", "payment_collected"];
+  }
+  return ["placed", "confirmed", "shipped", "out_for_delivery", "delivered"];
+};
 
-const getOnlineStatusSteps = () => ["placed", "paid", "shipped", "out_for_delivery", "delivered"];
-const getOnlineStatusLabels = () => ({ 
-  placed: "Order Placed", 
-  paid: "Payment Confirmed", 
-  shipped: "Shipped", 
-  out_for_delivery: "Out for Delivery", 
-  delivered: "Delivered"
-});
+const getStatusLabels = (isCOD) => {
+  if (isCOD) {
+    return {
+      placed: "Order Placed",
+      confirmed: "Order Confirmed",
+      shipped: "In Transit",
+      out_for_delivery: "Out for Delivery",
+      delivered: "Delivered",
+      payment_collected: "Payment Collected"
+    };
+  }
+  return {
+    placed: "Order Placed",
+    confirmed: "Order Confirmed", 
+    shipped: "In Transit",
+    out_for_delivery: "Out for Delivery",
+    delivered: "Delivered"
+  };
+};
 
 export default function OrderConfirmationPage() {
   const searchParams = useSearchParams();
@@ -107,26 +115,45 @@ export default function OrderConfirmationPage() {
   );
 
   const isCOD = order.payment_method === 'cod';
-  const STATUS_STEPS = isCOD ? getCODStatusSteps() : getOnlineStatusSteps();
-  const STATUS_LABELS = isCOD ? getCODStatusLabels() : getOnlineStatusLabels();
+  const STATUS_STEPS = getStatusSteps(isCOD);
+  const STATUS_LABELS = getStatusLabels(isCOD);
   
-  // For COD orders, map 'confirmed' status to same position, but show different flow
-  // For online orders, map payment_status to appropriate step
-  let displayStatus = order.order_status;
-  if (!isCOD && order.payment_status === 'paid' && order.order_status === 'placed') {
-    displayStatus = 'paid'; // Show as paid step for online orders
+  // Determine current step based on DTDC tracking or order status
+  let currentStep = order.order_status;
+  
+  // Map DTDC tracking status to our display steps
+  if (track?.step) {
+    const dtdcStepMapping = {
+      'softdata_upload': 'confirmed',  // Show as "Order Confirmed" instead of technical term
+      'picked_up': 'shipped',
+      'accepted': 'shipped',
+      'in_transit': 'shipped',
+      'at_destination': 'out_for_delivery',
+      'out_for_delivery': 'out_for_delivery',
+      'delivered': 'delivered'
+    };
+    
+    const mappedStep = dtdcStepMapping[track.step] || track.step;
+    
+    // Use DTDC status if it's more advanced than database status
+    const currentIdx = STATUS_STEPS.indexOf(currentStep);
+    const dtdcIdx = STATUS_STEPS.indexOf(mappedStep);
+    if (dtdcIdx > currentIdx) {
+      currentStep = mappedStep;
+    }
   }
+  
+  // For online orders that are paid, ensure we're at least at 'confirmed' step
+  if (!isCOD && order.payment_status === 'paid' && currentStep === 'placed') {
+    currentStep = 'confirmed';
+  }
+  
+  // For COD orders, check if payment was collected on delivery
   if (isCOD && order.order_status === 'delivered' && order.payment_status === 'cod_collected') {
-    displayStatus = 'payment_collected'; // COD final step
+    currentStep = 'payment_collected';
   }
   
-  const baseIdx = STATUS_STEPS.indexOf(displayStatus);
-  // DTDC "confirmed" (pickup scheduled) has no step of its own for online orders,
-  // so it maps to "paid", which is already step 2 there.
-  const dtdcKey = !isCOD && track?.step === "confirmed" ? "paid" : track?.step;
-  const dtdcIdx = track ? STATUS_STEPS.indexOf(dtdcKey) : -1;
-  // Only ever moves the tracker forward; "Payment Collected" still comes from our own payment_status.
-  const statusIdx = Math.max(baseIdx, dtdcIdx);
+  const statusIdx = STATUS_STEPS.indexOf(currentStep);
   const addr = order.shipping_address || {};
 
   // Events come newest first, so the first one is the latest update.
@@ -195,18 +222,89 @@ export default function OrderConfirmationPage() {
               {track && order.order_status !== "cancelled" && (
                 <div style={{ marginTop: 20, paddingTop: 16, borderTop: "1px solid rgba(201,168,76,0.25)" }}>
                   <p style={{ fontWeight: 700, color: "#3B1F0F", marginBottom: 4 }}>
-                    Status: {track.label}
+                    Tracking Status: {track.label}
                   </p>
                   {lastUpdated && (
-                    <p style={{ color: "#6B5948", fontSize: 13, margin: 0 }}>
+                    <p style={{ color: "#6B5948", fontSize: 13, margin: "4px 0" }}>
+                      <FiClock style={{ display: "inline", marginRight: 4 }} />
                       Last updated: {lastUpdated}
                     </p>
                   )}
-                  {track.issue && (
-                    <p style={{ color: "#b45309", fontSize: 13, marginTop: 8 }}>
-                      There is an issue with this delivery. Please contact customer support.
+                  {track.expectedDelivery && (
+                    <p style={{ color: "#059669", fontSize: 13, margin: "4px 0" }}>
+                      Expected delivery: {track.expectedDelivery}
                     </p>
                   )}
+                  {track.issue && (
+                    <div style={{ 
+                      marginTop: 12, 
+                      padding: "10px 12px", 
+                      background: "#fef3c7", 
+                      border: "1px solid #f59e0b",
+                      borderRadius: "8px"
+                    }}>
+                      <p style={{ color: "#b45309", fontSize: 13, margin: 0, fontWeight: 600 }}>
+                        ⚠️ Delivery Issue Detected
+                      </p>
+                      <p style={{ color: "#92400e", fontSize: 12, margin: "4px 0 0 0" }}>
+                        Please contact customer support for assistance.
+                      </p>
+                    </div>
+                  )}
+                  
+                  {/* Tracking Events */}
+                  {track.events && track.events.length > 0 && (
+                    <details style={{ marginTop: 12 }}>
+                      <summary style={{ 
+                        cursor: "pointer", 
+                        color: "#C9A84C", 
+                        fontSize: 13, 
+                        fontWeight: 600,
+                        userSelect: "none"
+                      }}>
+                        View tracking history ({track.events.length} updates)
+                      </summary>
+                      <div style={{ 
+                        marginTop: 8, 
+                        paddingLeft: 12, 
+                        borderLeft: "2px solid rgba(201,168,76,0.3)" 
+                      }}>
+                        {track.events.map((event, idx) => (
+                          <div key={idx} style={{ 
+                            marginBottom: 12, 
+                            paddingBottom: 12,
+                            borderBottom: idx < track.events.length - 1 ? "1px solid rgba(201,168,76,0.15)" : "none"
+                          }}>
+                            <p style={{ fontSize: 12, color: "#3B1F0F", margin: "0 0 2px 0", fontWeight: 600 }}>
+                              {event.status}
+                            </p>
+                            {event.location && (
+                              <p style={{ fontSize: 11, color: "#6B5948", margin: "0 0 2px 0" }}>
+                                📍 {event.location}
+                              </p>
+                            )}
+                            <p style={{ fontSize: 11, color: "#9CA3AF", margin: 0 }}>
+                              {event.time}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  )}
+                </div>
+              )}
+              
+              {!track && order.tracking_token && order.order_status !== "cancelled" && (
+                <div style={{ 
+                  marginTop: 16, 
+                  padding: "12px", 
+                  background: "#f3f4f6", 
+                  borderRadius: "8px",
+                  textAlign: "center"
+                }}>
+                  <p style={{ fontSize: 13, color: "#6b7280", margin: 0 }}>
+                    Tracking information will be available once the shipment is processed by our courier partner.
+                  </p>
                 </div>
               )}
             </motion.div>
@@ -349,12 +447,10 @@ export default function OrderConfirmationPage() {
                         ? styles.payPaid
                         : styles.payPending
                     }`}>
-                      {order.payment_status === "paid" 
+                      {order.payment_status === "paid" || order.payment_status === "cod_collected"
                         ? "Paid" 
                         : order.payment_status === "cod_pending" 
                         ? "Pending" 
-                        : order.payment_status === "cod_collected"
-                        ? "Collected"
                         : order.payment_status === "refund_initiated"
                         ? "Refund Processing"
                         : order.payment_status === "refunded"
