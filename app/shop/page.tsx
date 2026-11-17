@@ -8,6 +8,7 @@ import { breadcrumbJsonLd } from "@/src/frontend/components/Seo/Breadcrumbs";
 import type { Product } from "@/src/frontend/components/shop/products/productShared";
 import { BundlePricing } from "@/src/frontend/lib/pricing";
 import { pageMetadata } from "@/src/frontend/lib/seo";
+import { PackagingVideo } from "@/src/frontend/components/shop/PackagingVideo/PackagingVideo";
 
 export const metadata: Metadata = pageMetadata({
   title: "Shop Low-GI FibreRich Thins",
@@ -116,6 +117,11 @@ export default async function ShopPage() {
       <Hero />
       <ComboOffer flavorProducts={products} />
       <GlutenFree products={products.length ? products : undefined} />
+  
+      <PackagingVideo
+  src="/video/packaging.mp4"
+  poster="/videos/packaging-poster.jpg"
+/>
     </main>
   );
 }
