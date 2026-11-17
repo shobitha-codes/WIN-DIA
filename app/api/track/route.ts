@@ -3,19 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import { getDtdcTracking } from '../../../src/backend/lib/dtdc-tracking';
 export const dynamic = 'force-dynamic';
 
-// Map DTDC tracking status to our order_status values
+// Map DTDC tracking step to our order_status values
+// getDtdcTracking already returns simplified steps: 'placed', 'shipped', 'out_for_delivery', 'delivered'
 function mapDtdcToOrderStatus(dtdcStep: string): string {
-  const mapping: Record<string, string> = {
-    'softdata_upload': 'shipped',
-    'picked_up': 'shipped',
-    'accepted': 'shipped',
-    'in_transit': 'shipped',
-    'at_destination': 'out_for_delivery',
-    'out_for_delivery': 'out_for_delivery',
-    'delivered': 'delivered',
-    'cancelled': 'cancelled'
-  };
-  return mapping[dtdcStep] || 'placed';
+  // DTDC tracking already returns our exact status values, just pass through
+  const validStatuses = ['placed', 'shipped', 'out_for_delivery', 'delivered', 'cancelled'];
+  return validStatuses.includes(dtdcStep) ? dtdcStep : 'placed';
 }
 
 export async function GET(req: Request) {
